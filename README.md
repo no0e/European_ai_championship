@@ -1,40 +1,51 @@
-# Rendu final — European AI Championship Paris (21-22/11/2026)
+# European AI Championship Paris 2026 — our solutions
 
-Cette branche ne contient que le code qui a produit le **meilleur score public** de chaque épreuve, avec toute la
-chaîne depuis l'état initial (fichiers officiels, données brutes) jusqu'au fichier soumis. Chaque dossier a son
-`README.md` : méthode, raisonnement, commandes dans l'ordre, ce qui a été écarté, limites.
+Code of our best submission for each of the three tasks of the Paris stage (21–22 November 2026). Each task folder is
+self-contained: one configuration file to edit, one script that runs the whole pipeline from the official data to the
+submitted file, and a README with the method, how we got there, what did not work, and reproducibility notes.
 
-| Épreuve | Meilleur score public | Soumission | Méthode en une ligne | Branche / commit d'origine |
-|---|---|---|---|---|
-| [`task1/`](task1/README.md) Localisation de watermark | **0,7872614154749301** | n° 3606, 22/11 08 h 13, `sub_m5.pt` | détecteur dense par méthode entraîné sur des composites exacts (tatoueurs officiels, **cadre tatoué plus grand que l'image**), deuxième échelle, affinage en CV, ensemble + filtre guidé + rectangles TrustMark | `task1-k5` @ `7ce9985` |
-| [`task2/`](task2/README.md) Model Equality Testing | **0,85** | n° 3549, 22/11 07 h 54, `SOUMISSION_FINALE_0850.csv` | familles lues sur les habitudes du modèle de base, puis **boîte blanche** : checkpoints identifiés, watermark / température / fp8 / LoRA reconnus par teacher forcing des réponses déjà payées | `task2-kyllian` @ `57274af` (+ `9260647`) |
-| [`task3/`](task3/README.md) Unlearning | **0,4700011591814447** | 22/11 07 h 59, `plat6.pt` | cibles « marge par rang » + distillation calée sur la perte par image, **moyenne de poids** de six modèles | `task3-k3` @ `1f4b369` |
+| Task | Best public score | Submitted file | Method in one line |
+|---|---|---|---|
+| [Task 1 — Watermark localisation](task1/README.md) | **0.7872614154749301** | `sub_m5.pt` | one dense detector per method, trained on exact composites made with the official embedders (on a **watermarked frame larger than the image**), second scale, CV fine-tuning on real images, ensemble + guided filter + TrustMark rectangles |
+| [Task 2 — Model equality testing](task2/README.md) | **0.85** | `results/submission_final_0.85.csv` | families read on habits of the base model, then **white box**: local checkpoints identified, watermark / temperature / fp8 / LoRA recognised by teacher forcing of the answers already collected |
+| [Task 3 — Unlearning](task3/README.md) | **0.4700011591814447** | `plat6.pt` | rank-based margin targets + distillation matched on per-image loss, **weight average** of six models |
 
-## Organisation
+## Layout of every task folder
 
 ```
-src/        __init__.py (effets de bord Windows, `import src`), submit.py (journal des soumissions, utilisé par task1)
-task1/      starter_kit officiel, signaux, rectangles, dense/ (v2 → v4, agent A), dense/k5/ (cadre, k6, assemblage m5)
-task2/      sondes et collecte boîte noire, k/ (collecte longue, diagnostics, structures), wb2/ (boîte blanche), CSV final
-task3/      fichiers officiels, ancres COCO, k3/ (cibles, distillation, moyenne), k5/ (variantes synthétiques)
+taskN/
+  README.md        method, how we got there, pipeline, what did not work, reproducibility notes
+  config.env       paths (data, models, outputs), GPUs, Python interpreter -- the only file to edit
+  run_all.sh       runs every step in order
+  steps/           one short script per step, numbered (each can be re-run alone)
+  src/             Python code
+  slurm/           example batch script for a Slurm cluster
+  results/         what we submitted and the scores obtained
+  requirements.txt
+```
+Task 2 also ships `data/`: the answers we paid for (they cannot be bought again), so its decision steps run on CPU in
+about two minutes and rebuild the submitted CSV byte for byte.
+
+## Running
+
+```bash
+cd taskN && pip install -r requirements.txt && $EDITOR config.env && bash run_all.sh
 ```
 
-## Ce qui n'est pas dans la branche
+| Task | Data to provide | Hardware we used | Time (estimate) |
+|---|---|---|---|
+| 1 | official `train.zip` / `test.zip`, DIV2K validation HR, ConvNeXt-tiny and SAM ViT-H weights | 1 node, 4 × A100 40 GB | ~6–8 h |
+| 2 | nothing for steps 00–06 and 09 (answers shipped); Hugging Face checkpoints for the white-box steps | CPU; 1 GPU for steps 07–08 | 2 min CPU; ~1 h GPU |
+| 3 | official `model.pt` and `forget_images.npz`, COCO val2017 images | 1 node, 4 × A100 | ~20 min |
 
-- **Données et poids** : images des épreuves, modèles officiels, checkpoints entraînés, réponses non versionnées,
-  fichiers soumis `.pt`. Ils sont sur le scratch JURECA (`/p/scratch/training2666/diette1/Sevel_Labs_ENSAI/`).
-  Exception : pour la tâche 2, les réponses payées (`snapshot_*.jsonl`) et les CSV soumis sont inclus, car ils ne
-  se rachètent pas.
-- **Clés d'équipe** : jamais dans git (`WMLOC_API_KEY`, `MET_API_KEY` / `API_KEY`, `.submit_t3.py`).
-- **Diagnostics et pistes abandonnées** : restés sur les branches d'origine ; les README les résument avec leurs mesures.
-- Quelques commandes n'ont jamais été versionnées. Elles sont **reconstituées** et signalées comme telles dans les
-  README (liste des runs assemblés pour m5, réglages de v7/v8 pour la tâche 1 ; fusion des variantes et cibles de `y1`
-  pour la tâche 3).
+Submission scripts read the team key from the environment (`WMLOC_API_KEY`, `API_KEY`, `T3_API_KEY`); no key is
+stored in this repository.
 
-## Ajouts propres à cette branche
+## Notes
 
-- `task1/dense/k5/{common,assemble,compare_cv,submit_file}.py` : liens symboliques vers `task1/dense/`, parce que
-  `asm.sh` et les scripts de `k5/` les appellent depuis `k5/`.
-- `task2/` : la phase boîte noire est à la racine du dossier, comme dans `tasks/model_equality/` d'origine, pour que
-  les chemins relatifs de `k/` et de `wb2/` restent valides.
-- Aucun fichier de code n'a été modifié : tout est copié tel quel depuis les commits cités.
+- Scores are the public leaderboard values (part of the test data); the final ranking uses the hidden part.
+- Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The submitted files are
+  provided to check our scores directly (see each `results/` folder).
+- The code is the hackathon code, reorganised: paths became configurable and the cluster-specific launchers were
+  replaced by the numbered steps. Every change is listed at the end of each task README. Inline comments and printed
+  messages are mostly in French, the team's working language.

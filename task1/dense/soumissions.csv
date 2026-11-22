@@ -1,4 +1,0 @@
-ts,task,score,submission,seed,note
-2026-11-21 22:48:09,t1-watermark-loc,0.7381,sub_v3.pt sha1 86ed01d521,,"HTTP 200 ; v3 : affinage CV, CV 0,7085 ± 0,021, +0,032 apparié sur v2"
-2026-11-21 23:09:49,t1-watermark-loc,0.7463,sub_v3g.pt sha1 17f43589d4,,"HTTP 200 ; v3 + filtre guidé couleur (assemble --post, 8 variantes) : CV 0,7162 ± 0,0215, +0,0077 apparié sur v3"
-2026-11-22 00:47:25,t1-watermark-loc,0.7469,sub_v34g.pt sha1 34beafa182,,"HTTP 200 ; moyenne v3 + v4 + filtre guidé : CV 0,7213 ± 0,0214, +0,0051 apparié sur v3 + filtre"

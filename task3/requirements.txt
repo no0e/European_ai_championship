@@ -3,3 +3,8 @@ torch>=2.3
 timm>=0.9.12
 numpy>=1.24
 requests>=2.28
+
+# Added for this repository's pipeline
+pillow                      # step 01 (COCO anchors)
+# step 02 only (synthetic variants for model y1):
+# diffusers, transformers

@@ -1,194 +1,159 @@
-# Tâche 3 : unlearning (faire oublier 3 500 images à un ViT)
+# Task 3 — Unlearning (make a ViT forget 3,500 images)
 
-**Meilleur score public : 0,4700011591814447** (affiché 0,4700), 22/11 à 07 h 59.
-Fichier soumis : `k3/sub/plat6.pt`, **moyenne de poids de six modèles** de la méthode « k3 »
-(ps1, ps10, st1, bt1, bt2, y1, notés seuls de 0,4591 à 0,4646).
+**Best public score: 0.4700011591814447** — submitted 22/11 at 07:59, file `plat6.pt`: the parameter-wise
+**average of six unlearned models** (each one alone scored 0.4591–0.4646).
 
-Source : branche `task3-k3` (commit `1f4b369`). Journal complet : `task3/history/HISTORY.md` (92 soumissions de
-l'équipe, statistiques locales de chaque candidat) et `task3/history/narrative.md` sur cette branche ; journaux bruts
-des runs dans `task3/history/logs/`.
+## Quick start
 
----
+```bash
+cd task3
+pip install -r requirements.txt            # torch, timm, numpy, requests (+ diffusers, transformers for step 02)
+$EDITOR config.env                         # T3_WORK (must contain model.pt and forget_images.npz), COCO_DIR, GPUS
+bash run_all.sh                            # steps 01-04 -> $T3_WORK/models/plat6.pt
+bash steps/05_submit.sh                    # optional: submit (needs T3_API_KEY)
+```
+Hardware used: one node with 4 × A100 (JURECA-DC). Each of the six models takes about 6 minutes on one GPU;
+step 02 takes about 2 minutes on 4 GPUs. `slurm/run_all.sbatch` is an example batch script.
 
-## 1. Le problème
+## 1. The task
 
-- Modèle : **ViT-B/16** classant **100 classes**, fourni en `model.pt` (« orig ») ; **3 500 images à oublier**
-  (`forget_images.npz`), **sans labels**. Aucun jeu à retenir, aucun jeu de test fourni.
-- On rend le `state_dict` du modèle désappris. Le serveur le compare à « gold » (moyenne de modèles réentraînés sans
-  les images à oublier) :
-  - `forget = mean_std_score × prediction_score` : la moyenne et l'écart-type de la perte sur les images à oublier
-    doivent ressembler à ceux de gold, et les sorties à T = 2 aussi, image par image (KL(gold‖sub) / KL(gold‖orig)) ;
-  - `retain = accuracy_score × kl_similarity` sur un jeu de contrôle caché : rester collé à orig ailleurs ;
-  - score = forget × retain, et **0 si la précision sur le jeu caché passe sous 70 %**.
-- Une soumission environ toutes les 8 à 10 minutes par équipe.
-- Rendre orig tel quel donne 0 (forget = 0). Il ne faut pas « oublier au maximum » mais **imiter un modèle qui n'a
-  jamais vu ces images**.
+- **Model**: ViT-B/16 classifying 100 classes (`model.pt`, "orig"). **Forget set**: 3,500 images
+  (`forget_images.npz`), **without labels**. No retain set and no held-out set are given.
+- **Submission**: the `state_dict` of the unlearned model. The server compares it with "gold" (models retrained
+  without the forget set):
+  - `forget = mean_std_score × prediction_score`: mean and standard deviation of the loss on the forget images must
+    match gold's, and so must the per-image outputs at T = 2 (KL(gold‖sub) / KL(gold‖orig));
+  - `retain = accuracy_score × kl_similarity` on a hidden control set: stay close to orig elsewhere;
+  - score = forget × retain, and **0 if the hidden accuracy falls below 70 %**.
+- Submitting orig unchanged scores 0. The goal is not to forget as much as possible but to **imitate a model that
+  never saw these images**.
 
-## 2. La méthode finale (k3 + moyenne de poids)
+## 2. Method
 
-En trois phrases : gold se comporte sur les images à oublier comme un modèle « en test » (souvent faux, pertes fortes
-et dispersées). On fabrique donc, pour chaque image, une **cible** = les logits d'orig dont on abaisse seulement le
-logit de la classe d'origine, d'autant plus que l'image est « difficile ». Puis on **distille** : l'élève part d'orig,
-apprend ces cibles sur les images à oublier et leurs copies altérées, et reste collé à orig sur des images d'ancrage
-(COCO).
+**Idea in three sentences.** On the forget images, gold behaves like a model at test time: often wrong, with large
+and widely spread losses. So for every image we build a **target** = orig's logits in which only the logit of the
+original class is lowered, the more so the "harder" the image. Then we **distil**: the student starts from orig,
+learns these targets on the forget images and on altered copies of them, and stays equal to orig on anchor images.
 
-### 2.1 Les cibles « marge par rang » (`k3/tg.py`)
+### 2.1 Rank-based margin targets — `src/tg.py`
 
-- Classe d'origine y = prédiction d'orig. Difficulté u(x) ∈ [0, 1] = rang de la marge moyenne d'orig sur l'image propre
-  et 4 vues altérées (`--rank mv`).
-- Marge imposée à la classe d'origine : `m(x) = mu − sigma · Φ⁻¹(u(x)) − beta · rho_c` (rho_c = poids relatif de la
-  classe dans le jeu à oublier) ; les logits des autres classes sont ceux d'orig, multipliés par `tb`.
-- Réglage retenu : `mu = −2,5`, `sigma = 7`, `tb = 1,4` (écarter un peu les autres classes), `--pos_scale 0.5`
-  (marges positives divisées par deux : les images que gold classe juste sont moins confiantes).
+- Original class y = orig's prediction. Difficulty u(x) ∈ [0, 1] = rank of orig's mean margin over the clean image
+  and 4 deterministic augmented views (`--rank mv`).
+- Imposed margin of the original class: `m(x) = mu − sigma · Φ⁻¹(u(x)) − beta · rho_c`, where rho_c = n_c / max n_c is
+  the relative size of the class in the forget set. Logits of the other classes = orig's, scaled by `tb`.
+- Selected setting: `mu = −2.5`, `sigma = 7`, `tb = 1.4` (push the other classes slightly apart),
+  `--pos_scale 0.5` (positive margins halved: images that gold still classifies correctly are less confident).
 
-### 2.2 La distillation (`k3/k3.py distill`)
+### 2.2 Distillation — `src/k3.py distill`
 
-- 30 époques, lr 1e-4, départ = orig, KL à T = 2 vers les cibles + **perte de Huber sur la CE par image**
-  (`--w_ce 1`, indispensable : sans elle la queue de pertes n'est pas reproduite).
-- Copies altérées des images à oublier (recadrage, miroir, couleurs, flou, bruit) : la moitié du score se joue sur
-  elles ; on y abaisse la marge de 4,5 de plus (`--view_delta 4.5`), avec 30 % d'images propres (`--clean_frac`) et
-  20 % de vues fortes (`--strong_frac`).
-- Ancres COCO val2017 (`anchors.npz`) : l'élève y reste égal à orig (KL).
+- 30 epochs, lr 1e-4, start = orig; KL at T = 2 towards the targets **plus a Huber loss on the per-image
+  cross-entropy** (`--w_ce 1`; without it the tail of the loss distribution is not reproduced).
+- Altered copies of the forget images (crop, flip, colour, blur, noise) — they count for half of the score; their
+  margin is lowered by 4.5 more (`--view_delta 4.5`), with 30 % clean images (`--clean_frac`) and 20 % strong views
+  (`--strong_frac`).
+- Anchors: 5,000 COCO val2017 images, on which the student must keep orig's outputs (KL).
 
-### 2.3 La moyenne de poids (`k3/k3.py avg`)
+### 2.3 Weight averaging — `src/k3.py avg`
 
-Six modèles du même plateau de réglages, tous partis d'orig, moyennés paramètre par paramètre. La moyenne retire le
-bruit propre à chaque entraînement (±0,006 mesuré en relançant `v22` avec une autre graine) et fixe le niveau réel du
-réglage : **0,4700** contre 0,459-0,465 pour chacun. Moyenne de douze modèles (`plat12`) : 0,4690. C'est aussi le
-choix le plus sûr pour le classement final sur les images cachées.
+Six models from the same plateau of settings, all starting from orig, averaged parameter by parameter. Averaging
+removes the training noise of each run (±0.006, measured by re-running one setting with another seed) and gives the
+real level of the setting: **0.4700** versus 0.459–0.465 for each model. Averaging twelve models gave 0.4690.
 
-| Modèle | Ce qui le distingue | Public seul |
+| Model | What distinguishes it | Public score alone |
 |---|---|---|
-| `ps1` | réglage de référence (`--pos_scale 0.5`) | 0,4605 |
-| `ps10` | `ps1`, autre graine (`--seed 1`) | non soumis |
-| `st1` | 35 % de vues fortes, 25 % d'images propres | 0,4646 |
-| `bt1` | marge dépendant du poids de la classe, `beta = 2`, `mu = −1,1` | 0,4591 |
-| `bt2` | idem, `beta = −2`, `mu = −3,9` | 0,4597 |
-| `y1` | 30 % de variantes synthétiques (diffusion) traitées comme des copies à oublier | 0,4596 |
+| `ps1` | reference setting (`--pos_scale 0.5`) | 0.4605 |
+| `ps10` | `ps1` with another seed | not submitted |
+| `st1` | 35 % strong views, 25 % clean images | 0.4646 |
+| `bt1` | class-size dependent margin, `beta = 2`, `mu = −1.1` | 0.4591 |
+| `bt2` | same, `beta = −2`, `mu = −3.9` | 0.4597 |
+| `y1` | 30 % synthetic variants (diffusion) treated as copies to forget | 0.4596 |
 
-## 3. Le raisonnement, étape par étape
+## 3. How we got there
 
-| Moment | Meilleur public | Ce qui a changé, et pourquoi |
+| Time | Best public | What changed, and why |
 |---|---|---|
-| 21/11 17 h 13 | 0,024 | Adoucissement des sorties (T = 8) + ancres COCO : la cible gold n'est pas « moins confiant partout ». |
-| 21/11 après-midi | 0 (×2) | Chirurgie de la tête sur les 9 classes « lourdes » : nuisible. |
-| 21/11 22 h 58 | 0,1496 | Plis SCRUB, extrapolés en poids (θ_orig + a·ΣΔ) + température de tête : désapprend peu et dérive beaucoup (accord sur les ancres 0,61). |
-| 22 h 00 – 22 h 30 | — | Reprise à zéro. Le modèle a été entraîné de zéro (cosinus ≈ 0 avec 7 checkpoints timm) ; images générées par diffusion, classes fines groupées en familles. |
-| 22 h 40 – 23 h 30 | — | **Simulateur** (`k3/sim/` sur la branche source) : ViT entraîné de zéro sur CIFAR-100, même structure du jeu à oublier, 4 golds, barème exact. Il donne la **structure** de la méthode : fixer la marge de la classe d'origine par rang de difficulté (0,37-0,46 d'oubli contre 0,04 pour l'adoucissement) et ajouter la perte sur la CE par image. |
-| **23 h 37** | **0,2585** | Première soumission k3 (`r1`). |
-| 22/11 00 h 48 | 0,3524 | Calibrage de la marge : optimum vers mu −3, sigma 7. |
-| 02 h 33 → 03 h 02 | 0,381 | `k3/view_stats.py` (branche source) : l'élève oubliait **moins** sur les copies altérées (perte 3,18 sur un recadrage, 4,01 sur un miroir, contre 4,58 sur l'image propre) alors qu'un gold perd plutôt plus. Correction `--view_delta` + 70 % de vues. |
-| 03 h 21 → 03 h 32 | 0,4484 | Ne plus resserrer les logits des autres classes (`tb 1,0` : 0,4307), puis les écarter (`tb 1,4`). Le simulateur indiquait l'inverse : ses réglages fins ne se transfèrent pas. |
-| 03 h 51 → 05 h 56 | — | Vérification axe par axe : optimum local (mu −1,5 : 0,4189 ; −3,5 : 0,3745 ; 50 époques : 0,4027 ; 20 : 0,4289). Bruit mesuré : ±0,006. |
-| 06 h 06 | 0,4605 | `--pos_scale 0.5` (`ps1`). 0,3 : 0,4557 ; 0 : 0,4365. |
-| 07 h 19 | 0,4646 | 35 % de vues fortes (`st1`), dans le bruit. |
-| **07 h 59** | **0,4700** | **Moyenne de poids des six modèles du plateau (`plat6`).** |
+| 21/11 17:13 | 0.024 | Uniform output softening (T = 8) + COCO anchors: gold is not "less confident everywhere". |
+| 21/11 afternoon | 0 (×2) | Head surgery on the 9 "heavy" classes: harmful. |
+| 21/11 22:58 | 0.1496 | SCRUB folds extrapolated in weight space: forgets little, drifts a lot (anchor agreement 0.61). |
+| 22:00–22:30 | — | Restart from scratch. The model was trained from scratch (cosine ≈ 0 with 7 public timm checkpoints); images are diffusion-generated, fine classes grouped in families. |
+| 22:40–23:30 | — | **Simulator**: ViT trained from scratch on CIFAR-100, same forget-set structure, 4 golds, exact scoring. It gave the **structure** of the method: set the original-class margin by difficulty rank (0.37–0.46 forget score versus 0.04 for softening), and add the per-image CE loss. |
+| **23:37** | **0.2585** | First k3 submission. |
+| 22/11 00:48 | 0.3524 | Margin calibration: optimum near mu −3, sigma 7. |
+| 02:33 → 03:02 | 0.381 | The student forgot **less** on altered copies (loss 3.18 on a crop, 4.01 on a flip, versus 4.58 on the clean image) whereas gold loses rather more there. Fix: `--view_delta` + 70 % views. |
+| 03:21 → 03:32 | 0.4484 | Stop squeezing the other classes' logits (`tb 1.0`: 0.4307), then push them apart (`tb 1.4`). The simulator said the opposite: its fine settings do not transfer. |
+| 03:51 → 05:56 | — | Axis-by-axis check: local optimum (mu −1.5: 0.4189; −3.5: 0.3745; 50 epochs: 0.4027; 20: 0.4289). Noise measured at ±0.006. |
+| 06:06 | 0.4605 | `--pos_scale 0.5` (`ps1`). 0.3: 0.4557; 0: 0.4365. |
+| 07:19 | 0.4646 | 35 % strong views (`st1`), within noise. |
+| **07:59** | **0.4700** | **Weight average of six plateau models (`plat6`).** |
 
-Ce qu'on a compris du problème :
-1. Gold est « en test » sur les images à oublier : un modèle simple du score, ajusté sur sept soumissions, situe sa
-   perte vers 5 ± 4,5.
-2. Gold connaît toutes les classes, y compris les 9 classes dont 130 images sont à oublier (`h1` 0,1382 contre 0,3455).
-3. La barrière des 70 % est loin : neutraliser 3 classes ne coûte que 5 % du score.
-4. Les copies altérées comptent pour moitié, et un élève naïf y oublie moins que sur l'image propre.
-5. Toucher au seul logit de la classe d'origine suffit : resserrer les autres nuit, les écarter aide.
-6. La rétention est un coût structurel : sur le simulateur, ni vraies images du domaine en ancres, ni négatifs
-   adverses, ni sous-ensembles de paramètres ne la remontent de plus de 5 %.
+What we learned about the problem:
+1. Gold is "at test time" on the forget images: a simple model of the score, fitted on seven submissions, puts its
+   mean loss around 5 ± 4.5.
+2. Gold knows every class, including the 9 classes with 130 forget images each (`h1` 0.1382 versus 0.3455).
+3. The 70 % barrier is far: disabling 3 classes costs only 5 % of the score.
+4. Altered copies count for half, and a naive student forgets less on them than on the clean image.
+5. Touching only the original-class logit is enough: squeezing the other logits hurts, spreading them helps.
+6. Retention is a structural cost: on the simulator, neither in-domain anchors, adversarial negatives nor parameter
+   subsets raise it by more than 5 %.
 
-## 4. Pipeline complète, de l'état initial à `plat6.pt`
+## 4. Pipeline
 
-Tout tourne dans le dossier de l'épreuve (`unlearning/` sur JURECA), qui contient les fichiers officiels :
-`model.pt`, `forget_images.npz`, `task_template.py`, et la clé d'équipe dans `.submit_t3.py` (hors git). Disposition :
-`unlearning/{task_template.py, model.pt, forget_images.npz, anchors.npz, prepare_anchors.py, k3/, k5/}`.
-
-### Étape 0 — ancres COCO (nœud de connexion, qui a internet)
-
-```bash
-# images COCO val2017 (*.jpg) téléchargées dans val2017/
-python3 prepare_anchors.py val2017 anchors.npz 5000     # côté court 256, recadrage central 224 -> uint8 [N,224,224,3]
-```
-
-### Étape 1 — variantes synthétiques (pour `y1` seulement)
-
-```bash
-# diffusers/transformers installés à part : uv pip install --target k3/pylib --no-deps diffusers transformers tokenizers regex
-for i in 0 1 2 3; do CUDA_VISIBLE_DEVICES=$i python k5/gen_variants.py --strength 0.5 --k 2 --shard $i/4 --out k5/var_s0.5_$i.npz & done; wait
-python -c "
-import numpy as np, glob
-z = [np.load(f) for f in sorted(glob.glob('k5/var_s0.5_[0-3].npz'))]
-np.savez('k5/syn_s0.5.npz', images=np.concatenate([a['images'] for a in z]), src=np.concatenate([a['src'] for a in z]))"
-```
-`k3.py` lit `k5/syn_s0.5.npz` (variable `K3_SYN`). La fusion des quatre morceaux n'est pas versionnée : la commande
-ci-dessus est **reconstituée** d'après les clés attendues par `k3.py` (`images`, `src`, 2 variantes par image).
-
-### Étape 2 — les six modèles (un GPU chacun, ≈ 6 min ; `k3/rr.sh` = `tg.py` puis `k3.py distill`)
-
-Commandes exactes, relevées dans la file de commandes du job (`task3/history/logs/home_k3q/queue.log` sur la branche source) :
-```bash
-cd k3
-./rr.sh ps1  "--rank mv --mu -2.5 --sigma 7 --tb 1.4 --pos_scale 0.5" "--lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 --strong_frac 0.2 --clean_frac 0.3 --view_delta 4.5"
-./rr.sh ps10 "--rank mv --mu -2.5 --sigma 7 --tb 1.4 --pos_scale 0.5" "--lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 --strong_frac 0.2 --clean_frac 0.3 --view_delta 4.5 --seed 1"
-./rr.sh bt1  "--rank mv --mu -1.1 --sigma 7 --tb 1.4 --pos_scale 0.5 --beta 2"  "--lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 --strong_frac 0.2 --clean_frac 0.3 --view_delta 4.5"
-./rr.sh bt2  "--rank mv --mu -3.9 --sigma 7 --tb 1.4 --pos_scale 0.5 --beta -2" "--lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 --strong_frac 0.2 --clean_frac 0.3 --view_delta 4.5"
-./rr.sh st1  "--rank mv --mu -2.5 --sigma 7 --tb 1.4 --pos_scale 0.5" "--lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 --view_delta 4.5 --clean_frac 0.25 --strong_frac 0.35"
-# y1 : pas de ligne dans la file versionnée ; options relevées dans son journal (logs/real_y1.log) :
-cp tgt_real/ps1.pt tgt_real/y1.pt        # hypothèse : cibles de ps1 (aucun journal tg.py pour y1)
-python k3.py distill --env real --targets k3/tgt_real/y1.pt --lr 1e-4 --w_ce 1 --alphas 1.0 --epochs 30 \
-       --strong_frac 0.2 --clean_frac 0.3 --view_delta 4.5 --syn_frac 0.3 --out sub/y1.pt
-```
-Chaque distillation écrit `sub/<nom>_a1.0.pt` (state_dict) et affiche ses statistiques locales (précision et perte
-sur les images à oublier, accord et KL sur les ancres). Sur le GPU d'un nœud de connexion : `K3_AMP=fp16`.
-
-### Étape 3 — moyenne de poids et soumission
-
-```bash
-cd ..   # unlearning/
-python k3/k3.py avg --env real --inputs "k3/sub/ps1_a1.0.pt,k3/sub/ps10_a1.0.pt,k3/sub/st1_a1.0.pt,k3/sub/bt1_a1.0.pt,k3/sub/bt2_a1.0.pt,k3/sub/y1_a1.0.pt" --out k3/sub/plat6.pt
-python k3/submit.py k3/sub/plat6.pt      # attend le délai serveur (« Wait N »), journal output/submit_log.txt
-```
-Sur le cluster, ces commandes passaient par une file pilotée depuis le home (`k3/home_k3q/job.sh` : une ligne
-`<GPU> <commande>` par tâche, un GPU par commande) et une file de soumissions différées (`k3/home_k3q/subw.sh`).
-
-## 5. Ce qui a été écarté (mesuré)
-
-| Idée | Verdict | Mesure |
+| Step | Script | Output (in `$T3_WORK`) |
 |---|---|---|
-| Adoucissement uniforme des sorties | insuffisant | 0,024 à 0,027 public |
-| Chirurgie de la tête des 9 classes lourdes | nuisible | 0,0 (deux essais) |
-| Plis SCRUB comme cibles, extrapolés | dépassé | 0,15 ; forte dérive |
-| Classement par voisins dans les couches intermédiaires (k4) | ne se transfère pas | gagne sur le simulateur, −9 % sur le réel |
-| Gold n'ayant jamais vu les 9 classes lourdes | réfuté | `h1` 0,1382 contre 0,3455 |
-| Resserrer les logits des autres classes (tb 0,8) | nuisible | 0,381 contre 0,4307 (tb 1,0) |
-| 50 ou 20 époques au lieu de 30 | moins bon | 0,4027 et 0,4289 contre 0,4484 |
-| Images justes à marge nulle (`--pos_scale 0`) | moins bon | 0,4365 contre 0,4605 |
-| Vues fortes gardées identiques à orig | moins bon | `sk1` 0,4268 |
-| Même mauvaise classe pour toutes les copies d'une image | nuisible | `oc1` 0,3445 |
-| Pénalité de Fisher (certified removal) | sans effet | simulateur 0,361 contre 0,360 |
-| Variantes synthétiques comme ancres du domaine | nuisible | `y2` 0,3995 |
-| 50 % de vues fortes | un peu moins bon | `st2` 0,4508 |
+| 01 | `steps/01_prepare_anchors.sh` → `src/prepare_anchors.py` | `anchors.npz` (5,000 COCO images, 224 px) |
+| 02 | `steps/02_synthetic_variants.sh` → `src/gen_variants.py`, `src/merge_variants.py` | `k5/syn_s0.5.npz` (2 variants per forget image; used by `y1` only) |
+| 03 | `steps/03_train_models.sh` → `src/tg.py`, `src/k3.py distill` | `targets/<name>.pt`, `models/<name>_a1.0.pt`, `logs/` |
+| 04 | `steps/04_weight_average.sh` → `src/k3.py avg` | `models/plat6.pt` (submitted file) |
+| 05 | `steps/05_submit.sh` → `src/submit.py` | server response, `output/submit_log.txt` |
 
-Leçon : toute protection placée près des images à oublier (vues fortes gardées, variantes proches en ancres) empêche
-l'oubli de s'étendre à leurs versions transformées, qui comptent pour moitié dans le score.
+The options in step 03 are those of the hackathon runs, copied from the job queue log (`task3/history/logs/` on
+branch `task3-k3`). Each distillation prints local statistics (accuracy and loss on the forget images, agreement
+and KL on the anchors).
 
-## 6. Fichiers
+## 5. What did not work (measured)
 
-| Fichier | Rôle |
+| Idea | Verdict | Measurement |
+|---|---|---|
+| Uniform output softening | insufficient | 0.024–0.027 public |
+| Head surgery on the 9 heavy classes | harmful | 0.0 (two tries) |
+| SCRUB folds as targets, extrapolated | superseded | 0.15; strong drift |
+| Neighbour-purity difficulty ranking (mid-layer features) | does not transfer | better on the simulator, −9 % on the real task |
+| Gold never saw the 9 heavy classes | refuted | `h1` 0.1382 vs 0.3455 |
+| Squeezing the other logits (tb 0.8) | harmful | 0.381 vs 0.4307 (tb 1.0) |
+| 50 or 20 epochs instead of 30 | worse | 0.4027 and 0.4289 vs 0.4484 |
+| Zero margin for correctly classified images (`--pos_scale 0`) | worse | 0.4365 vs 0.4605 |
+| Strong views kept equal to orig | worse | 0.4268 |
+| Same wrong class for all copies of an image | harmful | 0.3445 |
+| Fisher-weighted penalty (certified removal) | no effect | simulator 0.361 vs 0.360 |
+| Synthetic variants as in-domain anchors | harmful | 0.3995 |
+| 50 % strong views | slightly worse | 0.4508 |
+
+Lesson: any protection placed close to the forget images (strong views kept, near variants as anchors) prevents
+forgetting from spreading to their transformed versions, which count for half of the score.
+
+## 6. Files
+
+| Path | Role |
 |---|---|
-| `task_template.py`, `requirements.txt` | fichiers officiels : construction du ViT, prétraitement du serveur, chargement des images, format de soumission |
-| `prepare_anchors.py` | ancres COCO val2017 → `anchors.npz` |
-| `k3/tg.py` | cibles « marge par rang » |
-| `k3/k3.py` | environnement réel, vues altérées, distillation (`distill`), moyenne de poids (`avg`) ; contient aussi le mode simulateur et les plis hors-pli, non utilisés ici |
-| `k3/rr.sh` | `tg.py` puis `k3.py distill`, avec réessais si le quota de fichiers sature |
-| `k3/submit.py` | soumission avec attente du délai serveur et réessais réseau |
-| `k3/home_k3q/job.sh`, `k3/home_k3q/subw.sh` | job Slurm piloté par une file dans le home ; file de soumissions |
-| `k5/gen_variants.py` | variantes image-vers-image (sd-turbo) des images à oublier, pour `y1` |
+| `config.env` | paths, GPUs, submission URL — the only file to edit |
+| `run_all.sh`, `steps/` | the pipeline, one script per step |
+| `slurm/run_all.sbatch` | example batch script for a 4-GPU node |
+| `src/task_template.py` | official template: ViT builder, server preprocessing, data loading |
+| `src/prepare_anchors.py` | COCO anchors |
+| `src/gen_variants.py`, `src/merge_variants.py` | synthetic variants (sd-turbo) and shard merging |
+| `src/tg.py` | rank-based margin targets |
+| `src/k3.py` | real environment, augmented views, distillation (`distill`), weight averaging (`avg`); also contains the simulator and out-of-fold modes, not used here |
+| `src/submit.py` | submission with server rate-limit handling |
+| `results/` | scores of every model in `plat6` and the final submission |
 
-## 7. Limites
+## 7. Notes on reproducibility
 
-- Les poids (`k3/sub/*.pt`), les cibles (`k3/tgt_real/`) et les variantes sont sur JURECA, pas dans git.
-- Deux étapes ne sont pas versionnées et sont **reconstituées** ci-dessus : la fusion `k5/var_s0.5_*.npz` →
-  `k5/syn_s0.5.npz`, et les cibles de `y1` (supposées identiques à celles de `ps1`).
-- `k3.py` est la version du commit `1f4b369` : elle a gagné des options après `ps1`, `bt1` et `bt2` (`--ewc`,
-  `--syn_frac`, `--llrd`, `--ema`, `--others_src`). Leurs valeurs par défaut (0 ; 1,0 pour `--llrd` ; `view` pour
-  `--others_src`) n'activent rien, ce qui redonne le comportement de l'époque.
-- Le simulateur (`k3/sim/`) et la piste k4 ont guidé la méthode mais ne produisent rien de `plat6` : ils restent sur
-  la branche `task3-k3`.
+- Training uses random augmentations and bf16: a re-run lands within about ±0.006 of each single-model score; the
+  average is more stable.
+- Two steps were reconstructed for this repository: merging the variant shards (`src/merge_variants.py`, a one-off
+  command during the hackathon) and the targets of `y1` (no `tg.py` log exists for it; the step copies the targets of
+  `ps1`, which has the same target options).
+- Changes to the hackathon code: working directory read from `$T3_WORK` (`k3.py`, `gen_variants.py`, `submit.py`),
+  key and URL read from the environment (`submit.py`). Options added to `k3.py` after `ps1` (`--ewc`, `--syn_frac`,
+  `--llrd`, `--ema`, `--others_src`) are inactive by default. Inline comments in the code are in French (the team's
+  working language).

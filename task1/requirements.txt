@@ -1,0 +1,4 @@
+# Official starter kit requirements (torch 2.5.1, onnxruntime-gpu, trustmark, timm, scipy, ...)
+-r src/starter_kit/requirements.txt
+# Added for this repository's pipeline: SAM segments (step 03)
+segment-anything

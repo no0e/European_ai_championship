@@ -6,3 +6,8 @@ numpy>=1.24
 pandas>=2.0
 scikit-learn>=1.3
 scipy>=1.10
+
+# Added for this repository's pipeline
+# white-box steps 07-08 (tested with torch 2.13 and transformers 5.13)
+torch>=2.3
+transformers>=4.45

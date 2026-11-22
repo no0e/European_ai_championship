@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+.api_key
+.submit_t3.py
+# local leftovers of the development repository
+/tasks/
+/tests/
+/src/
