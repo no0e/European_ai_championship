@@ -98,7 +98,9 @@ def main():
         resp = r['response']
         y = tok(resp, add_special_tokens=False)['input_ids']
         fin = r.get('finish')
-        stopped = (fin == 'stop') if fin not in (None, 'None') else (len(y) < r['max_tokens'] - 1)
+        # The server returns finish='stop' even when the answer was cut at max_tokens: decide on the length instead
+        # (the earlier rule appended an end token to every truncated long answer and inflated fitted temperatures).
+        stopped = fin != 'length' and len(y) < r['max_tokens'] - 3
         y2 = y + [eos] if stopped else y
         if not y2: continue
         ids = torch.tensor([p_ids + y2], device=DEV)
