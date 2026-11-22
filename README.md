@@ -34,11 +34,13 @@ cd taskN && pip install -r requirements.txt && $EDITOR config.env && bash run_al
 
 ### Checking our scores without retraining
 
-The files we submitted are attached to the release [`submitted-files`](../../releases/tag/submitted-files), so the
-public scores can be obtained again by submitting them, with no GPU and no training:
+The two model files we submitted are attached to this repository's GitHub release `submitted-files`, so the public
+scores can be obtained again by submitting them, with no GPU and no training:
 
 ```bash
 gh release download submitted-files -D /tmp/subs        # sub_m5.pt, plat6.pt
+# no release on this copy of the repository? use your own copies of the two files below,
+# or rebuild them with run_all.sh in task1/ and task3/.
 
 cd task1 && WMLOC_API_KEY=... bash steps/13_submit.sh /tmp/subs/sub_m5.pt "m5 re-check"
 cd task2 && API_KEY=...       bash steps/10_submit.sh "$PWD/results/submission_final_0.85.csv"
@@ -65,8 +67,8 @@ stored in this repository.
 
 ## Notes
 
-- The two submitted model files are attached to the GitHub release
-  [`submitted-files`](../../releases/tag/submitted-files) of this repository, with their sha1: `sub_m5.pt` (task 1,
+- The two submitted model files are attached to this repository's GitHub release `submitted-files`, with their
+  sha1: `sub_m5.pt` (task 1,
   16,734,551 B, sha1 `317a0ead1eee7df22bb1867ae68526c0a04d2ff7`) and `plat6.pt` (task 3, 343,617,075 B, sha1
   `978e7668096ee8affd463ac1b6b2ac58da87ff8e`, far above the Git file size limit). They are the files the servers
   scored; both were copied off the JURECA scratch after the event. The task 2 submission is a CSV and is in

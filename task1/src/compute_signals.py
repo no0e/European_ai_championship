@@ -7,7 +7,7 @@
                     features()["per_position_logits"] (logits avant le pooling moyen de la tête).
 StegaStamp n'expose que les logits globaux (graphe ONNX) : pas de map8 pour lui ici.
 
-    python tasks/Hackathon_Watermark_Localisation_Task/compute_signals.py --split train [--limit 20] [--device cpu]
+    python task1/src/compute_signals.py --split train [--limit 20] [--device cpu]
 
 Sortie : <data>/signals_<split>.npz (dans release/, ignoré par git).
 """

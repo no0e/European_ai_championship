@@ -15,8 +15,8 @@
 | no. 3562 | 0.7754 | 22/11 07:57 | 0.7632 | m3: + second-scale bases with frame |
 | **no. 3606** | **0.7872614154749301** | **22/11 08:13** | **0.7723** | **m5 (`sub_m5.pt`, sha1 317a0ead1e) — best** |
 
-The submitted `sub_m5.pt` is attached to the GitHub release [`submitted-files`](../../../releases/tag/submitted-files):
-16,734,551 B, sha1 `317a0ead1eee7df22bb1867ae68526c0a04d2ff7`. It holds 75 TrustMark rectangles and 945 dense maps,
+The submitted `sub_m5.pt` is attached to this repository's GitHub release `submitted-files`: 16,734,551 B, sha1
+`317a0ead1eee7df22bb1867ae68526c0a04d2ff7`. It holds 75 TrustMark rectangles and 945 dense maps,
 no constant prediction, median predicted fraction 0.46 (from the assembly log). `bash run_all.sh` rebuilds an
 equivalent file in `out/sub_m5.pt`, close but not identical — see the task README, section 7.
 

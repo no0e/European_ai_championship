@@ -115,6 +115,14 @@ Steps 03-04 use the **first 966 answers** of `answers_ep.jsonl`: the data availa
 built at 22:45. On all 1,672 answers the black-box families change (`ep-23` moves), which is one more reason the
 final decision rests on the white-box signals.
 
+**Step 04 may print `black-box split differs`, and that is not a failure.** `solve.py --taille 6` always
+reproduces family B (QWEN_A) and family A (LLAMA), but in family C (QWEN_B) the last place in the group of six is
+near-tied between `ep-03` and `ep-26`: we have seen both outcomes across runs of this repository — the 22:45 group
+{03, 07, 08, 20, 21, 32} and the variant {07, 08, 20, 21, 26, 32}. Either way it does not reach the answer, because
+**only the QWEN_A split of this step is kept**: QWEN_B and LLAMA are decided by the white-box signals in step 09.
+What proves the run is correct is step 09's own check, `identical to results/submission_final_0.85.csv : True`, which
+holds in both cases.
+
 ## 5. What did not work (measured)
 
 - Averaging 49 probes: MCC 0.000 (the 3 best probes: 0.446). Several questions per request: −44 % discriminative

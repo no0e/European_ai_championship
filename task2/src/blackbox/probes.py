@@ -213,7 +213,7 @@ if __name__ == "__main__":
     import os
     import sys
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-    import src  # noqa: F401  (stdout en UTF-8 sous Windows, cf. docs/20 § 1.2)
+    import src  # noqa: F401  (src/__init__.py force stdout en UTF-8 sous Windows)
     from collections import Counter
     c = Counter(p[1] for p in PROBES)
     print(f"{len(PROBES)} sondes, {len(MECHANISMS)} mécanismes")

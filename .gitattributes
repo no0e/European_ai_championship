@@ -1,0 +1,12 @@
+# The submissions are compared byte for byte (task 2 step 04 and step 09, sha1 of the task 1 file), so the
+# data and submission files must keep LF line endings on every platform, Windows included. Without this, a
+# Windows checkout rewrites them as CRLF and the self-checks report a difference that does not exist.
+*.csv     text eol=lf
+*.jsonl   text eol=lf
+*.json    text eol=lf
+*.txt     text eol=lf
+*.sh      text eol=lf
+*.sbatch  text eol=lf
+*.py      text eol=lf
+*.md      text eol=lf
+*.env     text eol=lf

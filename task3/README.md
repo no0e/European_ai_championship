@@ -106,9 +106,9 @@ What we learned about the problem:
 | 04 | `steps/04_weight_average.sh` → `src/k3.py avg` | `models/plat6.pt` (submitted file) |
 | 05 | `steps/05_submit.sh` → `src/submit.py` | server response, `output/submit_log.txt` |
 
-The options in step 03 are those of the hackathon runs, copied from the job queue log (`task3/history/logs/` on
-branch `task3-k3`). Each distillation prints local statistics (accuracy and loss on the forget images, agreement
-and KL on the anchors).
+The options in step 03 are those of the hackathon runs, read from the logs of the job queue that produced the six
+models; those raw logs are not part of this repository. Each distillation prints its own local statistics (accuracy
+and loss on the forget images, agreement and KL on the anchors), which is what we compared during the night.
 
 ## 5. What did not work (measured)
 
