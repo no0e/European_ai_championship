@@ -1,0 +1,34 @@
+endpoint,family,verdict,evidence,source
+ep-01,QWEN_A,blackbox,in the main group of the black-box split (confirmed by the 01:19 diagnostic: 0.55),steps/04 solve.py; results/submissions
+ep-02,QWEN_A,blackbox,in the main group of the black-box split; verbose step-by-step preamble (system prompt style),steps/04 solve.py
+ep-04,QWEN_A,blackbox,in the main group of the black-box split; repeat rate 0.36 (highest of the family: watermark),steps/04 solve.py; whitebox/repetition.py
+ep-12,QWEN_A,blackbox,in the main group of the black-box split,steps/04 solve.py
+ep-14,QWEN_A,blackbox,alone in the black-box split; indistinguishable from the core (profile expected from a light quantisation),steps/04 solve.py; structure/sims.py
+ep-17,QWEN_A,blackbox,alone in the black-box split; token-frequency residuals correlated with 18 and 25 (LoRA),steps/04 solve.py; whitebox/resid2.py
+ep-18,QWEN_A,blackbox,alone in the black-box split; permutation MMD z 3 to 7 (strong variant); LoRA residuals,steps/04 solve.py; structure/fulltest.py; whitebox/resid2.py
+ep-23,QWEN_A,blackbox,in the main group of the black-box split; recites a random persona,steps/04 solve.py
+ep-24,QWEN_A,blackbox,alone in the black-box split,steps/04 solve.py
+ep-25,QWEN_A,blackbox,alone in the black-box split; permutation MMD z 3 to 7 (strong variant); LoRA residuals,steps/04 solve.py; structure/fulltest.py; whitebox/resid2.py
+ep-33,QWEN_A,blackbox,in the main group of the black-box split; fitted temperature ~1 (T=1 decoding),steps/04 solve.py; whitebox/prof2.py
+ep-08,QWEN_B,cosmetic:system_prompt,recites a system prompt; declares itself in turn Anthropic and Alibaba,blackbox/families2.py; long collection sys_repeat
+ep-20,QWEN_B,cosmetic:persona,recites a random persona,long collection sys_repeat
+ep-06,QWEN_B,cosmetic:watermark,repeat rate 0.25 (highest of the family; ref-06 watermark 0.38 vs 0.04-0.13),whitebox/repetition.py
+ep-30,QWEN_B,cosmetic:temperature,fitted temperature ~1 (ref-08 T=1 validated at 1.004),whitebox/prof2.py
+ep-03,QWEN_B,score:in,in the main group in every structure compatible with the public scores (P=1.00),structure/fit.py; structure/bayes.py
+ep-07,QWEN_B,score:in,in the main group in every structure compatible with the public scores (P=1.00),structure/fit.py; structure/bayes.py
+ep-21,QWEN_B,judgement:in,scores say exactly one of {21; 32} is in the group (P=0.50 each); 21 chosen without decisive evidence,structure/bayes.py
+ep-32,QWEN_B,judgement:out,scores say exactly one of {21; 32} is in the group (P=0.50 each); 32 left alone,structure/bayes.py
+ep-22,QWEN_B,variant:fp8,LLR against simulated fp8 +2 nats vs -39 to -79 for the rest of the family (ref-02 fp8: +19 vs -41 to -225),whitebox/quant.py; whitebox/llr.py
+ep-26,QWEN_B,score:out,deviates from the modal answers on sharp probes; P(in group)=0.31,structure/bayes.py
+ep-28,QWEN_B,variant:strong,permutation MMD z 3 to 9 against the group,structure/fulltest.py
+ep-29,LLAMA,cosmetic:system_prompt,verbose step-by-step preamble (system prompt style); P(in group)=0.99,structure/bayes.py
+ep-16,LLAMA,cosmetic:persona,recites a random persona,long collection sys_repeat
+ep-10,LLAMA,cosmetic:watermark,repeat rate 0.20 (highest of the family); the black-box MMD had taken it for a different model,whitebox/repetition.py
+ep-31,LLAMA,cosmetic:temperature,fitted temperature ~1,whitebox/prof2.py
+ep-15,LLAMA,variant:fp8,LLR against simulated fp8 +50 [20; 81] nats vs -23 to -91 for the rest of the family,whitebox/quant.py; whitebox/llr.py
+ep-05,LLAMA,variant:lora,token-frequency residuals correlated with ep-11 (0.29); permutation MMD z 3 to 8,whitebox/resid2.py; structure/fulltest.py
+ep-11,LLAMA,variant:lora,token-frequency residuals correlated with ep-05 (0.29),whitebox/resid2.py
+ep-09,LLAMA,variant:lora,projects towards the LoRA variants {05; 11} on the dose-effect axis (+0.28 +- 0.09),structure/dose.py
+ep-13,LLAMA,score:in,P(in group)=0.62 from the public scores,structure/bayes.py
+ep-27,LLAMA,judgement:in,P(in group)=0.48 from the public scores; no decisive signal; put in the group,structure/bayes.py
+ep-19,LLAMA,judgement:out,P(in group)=0.57 from the public scores; no decisive signal; left alone,structure/bayes.py

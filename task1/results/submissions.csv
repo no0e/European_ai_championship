@@ -1,0 +1,10 @@
+ts,task,score,submission,seed,note
+2026-11-21 22:48:09,t1-watermark-loc,0.7381,sub_v3.pt sha1 86ed01d521,,"HTTP 200 ; v3 : affinage CV, CV 0,7085 ± 0,021, +0,032 apparié sur v2"
+2026-11-21 23:09:49,t1-watermark-loc,0.7463,sub_v3g.pt sha1 17f43589d4,,"HTTP 200 ; v3 + filtre guidé couleur (assemble --post, 8 variantes) : CV 0,7162 ± 0,0215, +0,0077 apparié sur v3"
+2026-11-22 00:47:25,t1-watermark-loc,0.7469,sub_v34g.pt sha1 34beafa182,,"HTTP 200 ; moyenne v3 + v4 + filtre guidé : CV 0,7213 ± 0,0214, +0,0051 apparié sur v3 + filtre"
+2026-11-22 07:36:43,t1-watermark-loc,0.7555,sub_m1_sel.pt sha1 9b1c12917f,,"HTTP 200 ; k5 m1_sel : synthétique avec cadre tatoué plus grand que l image (PS k5q + v4 + base k5b ; TM v4 + v4_b + base k5b + mise au cadre k5c3 + k5cp) ; CV 0,7298, +0,0085 [+0,0053 ; +0,0116] apparié sur la n 2170"
+2026-11-22 07:43:11,t1-watermark-loc,,sub_m2b.pt sha1 bec78b844c,,"HTTP 429 ; k5 m2b : modèles avec cadre (PS k5 + k5q + k5q4 + base k5b ; TM k5 + k5q + base k5b) + modèles 2e échelle de l agent A (v6 v6p v7 v7p v8) ; SS v3 + v4 ; CV 0,7599, +0,0386 [+0,0308 ; +0,0469] apparié sur la n 2170"
+2026-11-22 07:47:15,t1-watermark-loc,0.7714,sub_m2b.pt sha1 bec78b844c,,"HTTP 200 ; k5 m2b : modèles avec cadre (PS k5 + k5q + k5q4 + base k5b ; TM k5 + k5q + base k5b) + modèles 2e échelle de l agent A (v6 v6p v7 v7p v8) ; SS v3 + v4 ; CV 0,7599, +0,0386 [+0,0308 ; +0,0469] apparié sur la n 2170"
+2026-11-22 07:53:01,t1-watermark-loc,,sub_m3.pt sha1 5675755c1f,,"HTTP 429 ; k5 m3 : m2b + bases 2e échelle avec cadre (k6b) + pseudo TM (k5p) + SS v3+k5q (4 plis) ; CV 0,7632, +0,0419 [+0,0340 ; +0,0503] apparié sur la n 2170"
+2026-11-22 07:57:31,t1-watermark-loc,0.7754,sub_m3.pt sha1 5675755c1f,,"HTTP 200 ; k5 m3 : m2b + bases 2e échelle avec cadre (k6b) + pseudo TM (k5p) + SS v3+k5q (4 plis) ; CV 0,7632, +0,0419 [+0,0340 ; +0,0503] apparié sur la n 2170"
+2026-11-22 08:12:58,t1-watermark-loc,0.7873,sub_m5.pt sha1 317a0ead1e,,"HTTP 200 ; k5 m5 : 2e échelle + cadre (k6 x2, base k6b x2) + base k5b + modèles 2e échelle agent A ; SS v3 + v4 + base cadre k5b x2 + k5 x2 ; CV 0.7723 +0.0509"
