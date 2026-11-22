@@ -41,7 +41,7 @@ KEY_FILE = Path(__file__).resolve().parents[2] / ".api_key"
 
 
 def api_key() -> str:
-    """La clé n'est jamais écrite dans un fichier versionné (cf. docs/22)."""
+    """La clé n'est jamais écrite dans un fichier versionné : variable d'environnement seulement."""
     if os.environ.get("MET_API_KEY"):
         return os.environ["MET_API_KEY"].strip()
     if KEY_FILE.exists():

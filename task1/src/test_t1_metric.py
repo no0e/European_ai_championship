@@ -1,4 +1,4 @@
-"""Vérifications jouets de t1_metric (python tasks/Hackathon_Watermark_Localisation_Task/test_t1_metric.py)."""
+"""Vérifications jouets de t1_metric (python task1/src/test_t1_metric.py)."""
 import os
 import sys
 

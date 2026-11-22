@@ -12,8 +12,9 @@
 | `plat10.pt` (12-model average) | 0.4690 | 08:22 | |
 
 The submitted `plat6.pt` (a ViT-B/16 `state_dict`, 343,617,075 B, sha1 `978e7668096ee8affd463ac1b6b2ac58da87ff8e`)
-is far above the Git file size limit, so it is attached to the GitHub release
-[`submitted-files`](../../../releases/tag/submitted-files). Steps 03 and 04 rebuild it from the six averaged models
-(about 20 min on a 4-GPU node).
+is far above the Git file size limit, so it is attached to this repository's GitHub release `submitted-files`.
+Steps 03 and 04 rebuild it from the six averaged models (about 20 min on a 4-GPU node).
 
-Full history (92 team submissions, local statistics of each candidate): `task3/history/HISTORY.md` on branch `task3-k3`.
+We made 92 submissions on this task during the event; the table above keeps the ones that matter — the submitted
+file, the best single model, every model that enters the average, and the 12-model average we tried afterwards. The
+raw submission log is not part of this repository.
