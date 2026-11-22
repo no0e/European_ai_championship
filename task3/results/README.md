@@ -11,7 +11,7 @@
 | `ps10_a1.0.pt` | not submitted | | seed 1 of `ps1` |
 | `plat10.pt` (12-model average) | 0.4690 | 08:22 | |
 
-The submitted `plat6.pt` (a ViT-B/16 `state_dict`, about 330 MB) is too large for a plain Git repository; see the
-root README for where it is published.
+The submitted `plat6.pt` (a ViT-B/16 `state_dict`, about 330 MB) is too large for a plain Git repository: it is
+attached to the GitHub release `submitted-files` of this repository.
 
 Full history (92 team submissions, local statistics of each candidate): `task3/history/HISTORY.md` on branch `task3-k3`.

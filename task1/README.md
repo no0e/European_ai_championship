@@ -162,7 +162,7 @@ of the hackathon jobs.
 | `src/dense/mk_folds.py` | per-fold view of a model trained without folds |
 | `src/dense/assemble.py`, `src/dense/compare_cv.py` | ensemble, out-of-fold rules, guided filter, rectangles; paired CV comparison |
 | `src/dense/submit_file.py` | submission of a `.pt` |
-| `results/` | journal of the submissions (scores, sha1, notes) and the submitted `sub_m5.pt` |
+| `results/` | journal of the submissions (scores, sha1, notes); the submitted `sub_m5.pt` is attached to the GitHub release `submitted-files` |
 
 ## 7. Notes on reproducibility
 

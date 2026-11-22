@@ -43,6 +43,9 @@ stored in this repository.
 
 ## Notes
 
+- The two submitted model files, `sub_m5.pt` (task 1) and `plat6.pt` (task 3), are attached to the GitHub
+  release `submitted-files` of this repository (`plat6.pt`, about 330 MB, is above the Git file size limit).
+  The task 2 submission is a CSV and is in `task2/results/`.
 - Scores are the public leaderboard values (part of the test data); the final ranking uses the hidden part.
 - Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The submitted files are
   provided to check our scores directly (see each `results/` folder).
