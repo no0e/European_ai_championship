@@ -162,30 +162,51 @@ of the hackathon jobs.
 | `src/dense/mk_folds.py` | per-fold view of a model trained without folds |
 | `src/dense/assemble.py`, `src/dense/compare_cv.py` | ensemble, out-of-fold rules, guided filter, rectangles; paired CV comparison |
 | `src/dense/submit_file.py` | submission of a `.pt` |
-| `results/` | journal of the submissions (scores, sha1, notes) |
+| `results/` | journal of the submissions (scores, sha1, notes); the submitted `sub_m5.pt` is attached to the release `submitted-files` |
 
 ## 7. Notes on reproducibility
 
 - Training is stochastic (random composites, data-loader order) and budgets are set in minutes: a re-run gives a
   close but not identical ensemble.
-- **m5 composition**: the source is the note written with the submission — "second scale + frame (k6 ×2, base k6b ×2)
-  + base k5b + second-scale models (v6, v6p, v7, v7p, v8); StegaStamp v3 + v4 + frame base k5b ×2 + k5 ×2" (×2 =
-  folder listed twice, double weight). Step 12 rebuilds that list and writes it to `logs/12_runs.txt`, so a re-run
-  documents its own ensemble. It can no longer be checked against the hackathon run: the launcher and its log only
-  existed on the scratch of the JURECA project (`training2666`), whose access closed when the event ended.
-  `cv/cv_m5.npz` is not a fallback — `assemble.py` writes per-image arrays there (`name`, `method`, `kind`, `fold`,
-  `score`, `base`, `regime`), never the list of runs.
-- **v7, v7p and v8 are not reproduced here.** They were second-scale runs following the v6 / v6p recipe from other
-  starting points, trained in a separate working folder; their launchers and exact options were only on the cluster.
-  Step 08 therefore stops at v6 and v6p, step 12 uses v7/v7p/v8 only if those folders exist and prints a note when
-  they do not — so `run_all.sh` rebuilds **m5 minus v7, v7p, v8**. Order of magnitude of what this costs: adding
-  v6, v6p, v7, v7p and v8 together moved the public score from 0.7555 to 0.7714 (+0.0159, CV +0.0301) between m1_sel
-  and m2b. Two of those five, v6 and v6p, are rebuilt here; we never measured the three others separately, so the
-  share of that +0.0159 which is lost is unknown.
-- `LONG_BUDGET_MIN` (step 07) is our estimate of the budget the long job received: it was computed from a deadline at
-  the time, and the Slurm journal that would give the figure actually used is on the closed cluster. The trainer
-  measures its cost per step and fits the step count to whatever budget it is given, so another value changes the
-  length of that training, not its recipe.
+- **m5 composition.** The assembly launcher was recovered from the cluster, but it takes the ensemble as its
+  arguments — `asm.sh <name> <run folders…>` — and no script in the task folder calls it: the m5 command was typed by
+  hand and survives only in a teammate's shell history. Its log does not help either, because `assemble.py` never
+  prints its `--runs`. So the only description of the ensemble remains the note written with the submission: "second
+  scale + frame (k6 ×2, base k6b ×2) + base k5b + second-scale models (v6, v6p, v7, v7p, v8); StegaStamp v3 + v4 +
+  frame base k5b ×2 + k5 ×2" (×2 = folder listed twice, double weight). Step 12 rebuilds that list and writes it to
+  `logs/12_runs.txt`, so a re-run documents its own ensemble. `cv/cv_m5.npz` is not a fallback — `assemble.py` writes
+  per-image arrays there (`name`, `method`, `kind`, `fold`, `score`, `base`, `regime`), never the list of runs.
+- One question about m5 we could **not** settle. The hackathon folder also holds five single-method views,
+  `mix/v_…_agentA_runs_v{6,6p,7,7p,8}_pixelseal`, built by a helper that symlinks one method of a run; if m5 cited
+  those, the second-scale models entered on **PixelSeal only**. But that helper was last modified at 08:22, after
+  `sub_m5.pt` was written at 08:12, so the views may belong to a later ensemble. Step 12 cites the run folders
+  themselves, which is the reading the submission note supports; a jury wanting the other reading has to restrict
+  v6…v8 to PixelSeal in step 12.
+- **v7, v7p and v8: recipe recovered, still not rebuilt by `run_all.sh`.** All three are the same job as v6 and v6p
+  — phase 1 the v3 recipe (1,500 steps, `--bs 8 --lr 3e-4 --lr_backbone 2e-5 --keep_last --p_rect 0.12
+  --alpha 0.8 1.2 --synth_n 0 --scale2`, the five folds spread over four GPUs), phase 2 the v4 recipe (3,000 steps,
+  pseudo-labels of the test taken from phase 1 **of the same fold**, `--pseudo_frac 0.2 --p_fill 0.5 --p_blur 0.1`),
+  writing `runs/<run>` then `runs/<run>p`. Only the starting weights differ:
+
+  | Run | Base weights | Pair set | Slurm job | Ran for |
+  |---|---|---|---|---|
+  | v6, v6p | `runs/long` — step 07 here | `pairs_long` | 15905235 | 40 min 37 s |
+  | v7, v7p | `runs/dev` | `pairs` — step 04 here | 15905236 | 38 min 45 s |
+  | v8 | `runs/dev2` | `pairs` | 15905237 | 36 min 54 s, **cancelled** |
+
+  `dev` is step 07's training on the earlier pair set (its launcher is step 07's, with another SBATCH header:
+  partition `dc-gpu-devel`, 1 h 55). Two things we could not recover: the base options of `dev2`, and v8's phase 2 —
+  its job was cancelled before it, which is why the submission note lists v8 and not v8p. Steps 07 and 08 here
+  therefore stop at v6 and v6p; step 12 uses v7/v7p/v8 if those folders exist and prints a note when they do not, so
+  `run_all.sh` rebuilds **m5 minus v7, v7p, v8**. The five second-scale runs together moved the public score from
+  0.7555 to 0.7714 (+0.0159, CV +0.0301) between m1_sel and m2b; they were never measured one by one, so the share
+  lost with the three missing is unknown.
+- `LONG_BUDGET_MIN` **is 81**, the value the hackathon job actually used, read from its log: `budget d'entraînement :
+  81 min par processus (échéance 05:30, il est 03:43)` — the launcher gave each process the time left until a 05:30
+  deadline, minus 25 minutes reserved for the test predictions. Job 15904789 asked for 3 h 30 and ran 57 min 57 s,
+  because the budget was not what stopped it: three of its four processes hit the `--steps 40000` ceiling first, and
+  only PixelSeal (0.162 s per step) was cut by the budget, at 24,403 steps. The trainer measures its own cost per step
+  and fits the step count to the budget, so changing this value changes the length of that training, not its recipe.
 - Changes to the hackathon code: data, official models and outputs read from `$T1_DATA`, `$T1_MODELS`, `$T1_WORK`
   (`common.py`, `train_dense.py`, `gen_pairs.py`, `assemble.py`, `sam_feats.py`); `submit_file.py` writes its journal
   itself. `gen_pairs.py` and `train_dense.py` are the latest versions (with `--frame`, `--frames`, `--predict_only`);

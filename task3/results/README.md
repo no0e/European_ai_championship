@@ -11,8 +11,9 @@
 | `ps10_a1.0.pt` | not submitted | | seed 1 of `ps1` |
 | `plat10.pt` (12-model average) | 0.4690 | 08:22 | |
 
-The submitted `plat6.pt` (a ViT-B/16 `state_dict`, about 330 MB) is **not in this repository**: it is well above the
-Git file size limit, and it was written on the scratch of the JURECA project (`training2666`), whose access closed
-when the event ended. Steps 03 and 04 rebuild it from the six averaged models (about 20 min on a 4-GPU node).
+The submitted `plat6.pt` (a ViT-B/16 `state_dict`, 343,617,075 B, sha1 `978e7668096ee8affd463ac1b6b2ac58da87ff8e`)
+is far above the Git file size limit, so it is attached to the GitHub release
+[`submitted-files`](../../../releases/tag/submitted-files). Steps 03 and 04 rebuild it from the six averaged models
+(about 20 min on a 4-GPU node).
 
 Full history (92 team submissions, local statistics of each candidate): `task3/history/HISTORY.md` on branch `task3-k3`.
