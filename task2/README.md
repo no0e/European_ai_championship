@@ -145,6 +145,7 @@ holds in both cases.
 | `src/whitebox/` | teacher-forcing scoring, simulated quantisation, checkpoint identification, decoding, temperature, fp8 LLR, residuals, repetition rate |
 | `src/decide_partition.py` | final partition from the evidence table |
 | `data/` | the answers we paid for (1,672 black-box, 1,453 long), ref answers, probe lists, features |
+| `PITCH.md` | the two-minute pitch of this task |
 | `results/` | `submission_final_0.85.csv`, `endpoint_evidence.csv`, `ep_families2.json`, every submitted CSV with its public score (`submissions/`) |
 
 ## 7. Notes
@@ -168,6 +169,6 @@ holds in both cases.
   (`ep-19`, `ep-21`, `ep-27`, `ep-32`). Moving one endpoint changes only a few public pairs and the score is returned
   rounded, so after about twenty submissions the best public score is partly the luckiest: the final score may be
   lower than 0.85 for this reason.
-- Two endpoints read differently by our two white-box passes: the CPU pass (`task2-whitebox` branch) saw a
+- Two endpoints read differently by our two white-box passes: a second, CPU-only pass (not included in this folder) saw a
   temperature-1 signature on `ep-28` (alone in the final partition, strong shift in the permutation test) and long
   answers on `ep-29` (in the main group, verbose system-prompt preamble, which also lengthens answers).
