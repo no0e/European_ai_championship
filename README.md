@@ -32,6 +32,28 @@ about two minutes and rebuild the submitted CSV byte for byte.
 cd taskN && pip install -r requirements.txt && $EDITOR config.env && bash run_all.sh
 ```
 
+### Checking our scores without retraining
+
+The files we submitted are attached to the release [`submitted-files`](../../releases/tag/submitted-files), so the
+public scores can be obtained again by submitting them, with no GPU and no training:
+
+```bash
+gh release download submitted-files -D /tmp/subs        # sub_m5.pt, plat6.pt
+
+cd task1 && WMLOC_API_KEY=... bash steps/13_submit.sh /tmp/subs/sub_m5.pt "m5 re-check"
+cd task2 && API_KEY=...       bash steps/10_submit.sh "$PWD/results/submission_final_0.85.csv"
+cd task3 && T3_API_KEY=...    bash steps/05_submit.sh /tmp/subs/plat6.pt
+```
+
+Expected: **0.7872614154749301**, **0.85**, **0.4700011591814447**.
+
+Two traps worth knowing. **Give absolute paths**: steps 13 (task 1) and 10 (task 2) change into the working
+directory before handing the file to Python, so a relative path is resolved against `$T1_WORK` / `$T2_WORK` and not
+found. And each server rate-limits: task 2 accepts one submission per 30 minutes, task 1 answers HTTP 429 when it is
+too early — the task 1 script keeps its own journal in `$T1_WORK/out/submissions.csv` either way. Task 3 reads its
+key from `$T3_API_KEY`; without it, `submit.py` falls back to a file that does not exist here and raises
+`FileNotFoundError`.
+
 | Task | Data to provide | Hardware we used | Time (estimate) |
 |---|---|---|---|
 | 1 | official `train.zip` / `test.zip`, DIV2K validation HR, ConvNeXt-tiny and SAM ViT-H weights | 1 node, 4 × A100 40 GB | ~6–8 h |
@@ -43,16 +65,16 @@ stored in this repository.
 
 ## Notes
 
-- The two submitted model files, `sub_m5.pt` (task 1, about 16 MB, sha1 `317a0ead1e…`) and `plat6.pt` (task 3, about
-  330 MB), are **not in this repository**: they were written on the scratch of the JURECA project (`training2666`),
-  whose access closed when the event ended, and `plat6.pt` is above the Git file size limit anyway. What is published
-  is the code that rebuilds them and the sha1 of the task 1 file. The task 2 submission is a CSV and is in
+- The two submitted model files are attached to the GitHub release
+  [`submitted-files`](../../releases/tag/submitted-files) of this repository, with their sha1: `sub_m5.pt` (task 1,
+  16,734,551 B, sha1 `317a0ead1eee7df22bb1867ae68526c0a04d2ff7`) and `plat6.pt` (task 3, 343,617,075 B, sha1
+  `978e7668096ee8affd463ac1b6b2ac58da87ff8e`, far above the Git file size limit). They are the files the servers
+  scored; both were copied off the JURECA scratch after the event. The task 2 submission is a CSV and is in
   `task2/results/`.
 - Scores are the public leaderboard values (part of the test data); the final ranking uses the hidden part.
-- Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. As the submitted model
-  files are no longer available, those two scores can only be rechecked by re-running the pipeline; each `results/`
-  folder states exactly what every submission contained. Task 2 is the exception — its decision steps rebuild the
-  submitted CSV byte for byte.
+- Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The released files are the
+  ones to use to check our scores directly, without retraining; each `results/` folder states what every submission
+  contained. Task 2 needs no file — its decision steps rebuild the submitted CSV byte for byte.
 - The code is the hackathon code, reorganised: paths became configurable and the cluster-specific launchers were
   replaced by the numbered steps. Every change is listed at the end of each task README. Inline comments and printed
   messages are mostly in French, the team's working language.

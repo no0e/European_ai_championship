@@ -15,9 +15,9 @@
 | no. 3562 | 0.7754 | 22/11 07:57 | 0.7632 | m3: + second-scale bases with frame |
 | **no. 3606** | **0.7872614154749301** | **22/11 08:13** | **0.7723** | **m5 (`sub_m5.pt`, sha1 317a0ead1e) — best** |
 
-The submitted `sub_m5.pt` (about 16 MB, sha1 `317a0ead1e…`) is **not in this repository**: it was written on the
-scratch of the JURECA project (`training2666`), whose access closed when the event ended, and it was never copied off
-the cluster. `bash run_all.sh` rebuilds an equivalent file in `out/sub_m5.pt` (m5 minus v7/v7p/v8 — see the task
-README, section 7). The sha1 is kept here so the submitted file can still be identified if a copy turns up.
+The submitted `sub_m5.pt` is attached to the GitHub release [`submitted-files`](../../../releases/tag/submitted-files):
+16,734,551 B, sha1 `317a0ead1eee7df22bb1867ae68526c0a04d2ff7`. It holds 75 TrustMark rectangles and 945 dense maps,
+no constant prediction, median predicted fraction 0.46 (from the assembly log). `bash run_all.sh` rebuilds an
+equivalent file in `out/sub_m5.pt`, close but not identical — see the task README, section 7.
 
 `submissions.csv`: raw journal written by `submit_file.py` from 21/11 22:48 on (sha1 of each file, notes, HTTP status).
