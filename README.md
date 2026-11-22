@@ -43,12 +43,16 @@ stored in this repository.
 
 ## Notes
 
-- The two submitted model files, `sub_m5.pt` (task 1) and `plat6.pt` (task 3), are attached to the GitHub
-  release `submitted-files` of this repository (`plat6.pt`, about 330 MB, is above the Git file size limit).
-  The task 2 submission is a CSV and is in `task2/results/`.
+- The two submitted model files, `sub_m5.pt` (task 1, about 16 MB, sha1 `317a0ead1e…`) and `plat6.pt` (task 3, about
+  330 MB), are **not in this repository**: they were written on the scratch of the JURECA project (`training2666`),
+  whose access closed when the event ended, and `plat6.pt` is above the Git file size limit anyway. What is published
+  is the code that rebuilds them and the sha1 of the task 1 file. The task 2 submission is a CSV and is in
+  `task2/results/`.
 - Scores are the public leaderboard values (part of the test data); the final ranking uses the hidden part.
-- Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The submitted files are
-  provided to check our scores directly (see each `results/` folder).
+- Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. As the submitted model
+  files are no longer available, those two scores can only be rechecked by re-running the pipeline; each `results/`
+  folder states exactly what every submission contained. Task 2 is the exception — its decision steps rebuild the
+  submitted CSV byte for byte.
 - The code is the hackathon code, reorganised: paths became configurable and the cluster-specific launchers were
   replaced by the numbered steps. Every change is listed at the end of each task README. Inline comments and printed
   messages are mostly in French, the team's working language.

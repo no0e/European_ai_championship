@@ -9,4 +9,5 @@ wait
 folds $(gpu 0) pixelseal v6p "runs/v6/f{f}/pixelseal.pt" "runs/v6/f{f}/pixelseal_test.npz" 3000 $C --p_fill 0.5 --p_blur 0.1 &
 folds $(gpu 1) trustmark v6p "runs/v6/f{f}/trustmark.pt" "runs/v6/f{f}/trustmark_test.npz" 3000 $C --p_fill 0.5 --p_blur 0.1 &
 wait
-# v7, v7p, v8: same recipe from other second-scale sources (see README, section 7).
+# v7, v7p, v8 are NOT reproduced here: same recipe from other second-scale starting points, but their launchers
+# only existed on the cluster (see README, section 7). Step 12 assembles without them and says so.

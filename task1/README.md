@@ -124,7 +124,7 @@ never on the public score (30 % of the test, ±0.005 noise). The public score fo
 | 09 | `steps/09_frame_pairs.sh` | `pairs_frame/` (three methods) |
 | 10 | `steps/10_frame_bases.sh` | `runs/k5b/` (three methods), `runs/k6b/` (second scale) |
 | 11 | `steps/11_frame_cv.sh` | `runs/k6/f0..f4/` (PixelSeal, TrustMark), `runs/k5/f0..f4/` (StegaStamp) |
-| 12 | `steps/12_assemble.sh` → `mk_folds.py`, `assemble.py` | `out/sub_m5.pt`, `cv/cv_m5.npz`, CV report in `logs/12_assemble.log` |
+| 12 | `steps/12_assemble.sh` → `mk_folds.py`, `assemble.py` | `out/sub_m5.pt`, `cv/cv_m5.npz`, the list of folders in the ensemble in `logs/12_runs.txt`, CV report in `logs/12_assemble.log` |
 | 13 | `steps/13_submit.sh` → `submit_file.py` | server response, `out/submissions.csv` |
 
 Only the models that enter m5 are trained (for example v3 and v4 only for StegaStamp). The hyperparameters are those
@@ -162,17 +162,30 @@ of the hackathon jobs.
 | `src/dense/mk_folds.py` | per-fold view of a model trained without folds |
 | `src/dense/assemble.py`, `src/dense/compare_cv.py` | ensemble, out-of-fold rules, guided filter, rectangles; paired CV comparison |
 | `src/dense/submit_file.py` | submission of a `.pt` |
-| `results/` | journal of the submissions (scores, sha1, notes); the submitted `sub_m5.pt` is attached to the GitHub release `submitted-files` |
+| `results/` | journal of the submissions (scores, sha1, notes) |
 
 ## 7. Notes on reproducibility
 
 - Training is stochastic (random composites, data-loader order) and budgets are set in minutes: a re-run gives a
   close but not identical ensemble.
-- **m5 composition**: taken from the submission note — "second scale + frame (k6 ×2, base k6b ×2) + base k5b +
-  second-scale models (v6, v6p, v7, v7p, v8); StegaStamp v3 + v4 + frame base k5b ×2 + k5 ×2" (×2 = folder listed
-  twice, double weight). The exact list and the sources of v7, v7p and v8 were in the cluster logs:
-  **to be confirmed** (step 12 uses v7/v7p/v8 only if those runs exist).
-- `LONG_BUDGET_MIN` (step 07) is our estimate of the budget the long job received (it was computed from a deadline).
+- **m5 composition**: the source is the note written with the submission — "second scale + frame (k6 ×2, base k6b ×2)
+  + base k5b + second-scale models (v6, v6p, v7, v7p, v8); StegaStamp v3 + v4 + frame base k5b ×2 + k5 ×2" (×2 =
+  folder listed twice, double weight). Step 12 rebuilds that list and writes it to `logs/12_runs.txt`, so a re-run
+  documents its own ensemble. It can no longer be checked against the hackathon run: the launcher and its log only
+  existed on the scratch of the JURECA project (`training2666`), whose access closed when the event ended.
+  `cv/cv_m5.npz` is not a fallback — `assemble.py` writes per-image arrays there (`name`, `method`, `kind`, `fold`,
+  `score`, `base`, `regime`), never the list of runs.
+- **v7, v7p and v8 are not reproduced here.** They were second-scale runs following the v6 / v6p recipe from other
+  starting points, trained in a separate working folder; their launchers and exact options were only on the cluster.
+  Step 08 therefore stops at v6 and v6p, step 12 uses v7/v7p/v8 only if those folders exist and prints a note when
+  they do not — so `run_all.sh` rebuilds **m5 minus v7, v7p, v8**. Order of magnitude of what this costs: adding
+  v6, v6p, v7, v7p and v8 together moved the public score from 0.7555 to 0.7714 (+0.0159, CV +0.0301) between m1_sel
+  and m2b. Two of those five, v6 and v6p, are rebuilt here; we never measured the three others separately, so the
+  share of that +0.0159 which is lost is unknown.
+- `LONG_BUDGET_MIN` (step 07) is our estimate of the budget the long job received: it was computed from a deadline at
+  the time, and the Slurm journal that would give the figure actually used is on the closed cluster. The trainer
+  measures its cost per step and fits the step count to whatever budget it is given, so another value changes the
+  length of that training, not its recipe.
 - Changes to the hackathon code: data, official models and outputs read from `$T1_DATA`, `$T1_MODELS`, `$T1_WORK`
   (`common.py`, `train_dense.py`, `gen_pairs.py`, `assemble.py`, `sam_feats.py`); `submit_file.py` writes its journal
   itself. `gen_pairs.py` and `train_dense.py` are the latest versions (with `--frame`, `--frames`, `--predict_only`);
