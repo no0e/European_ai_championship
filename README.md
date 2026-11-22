@@ -8,6 +8,7 @@ not work, and reproducibility notes.
 - **Our solutions, in detail**: [task 1](task1/README.md) · [task 2](task2/README.md) · [task 3](task3/README.md)
 - **Pointers to the code that solves each task**: [Where to look](#where-to-look-task-by-task), below
 - **Slides of the presentation**: [`slides/Slides Sevel Labs.pdf`](slides/Slides%20Sevel%20Labs.pdf)
+- **The two model files we submitted**: release [`submitted-files`](../../releases/tag/submitted-files)
 
 | Task | Best public score | Submitted file | Method in one line |
 |---|---|---|---|
@@ -120,9 +121,10 @@ stored in this repository.
 - The two submitted model files are the ones the servers scored: `sub_m5.pt` (task 1, 16,734,551 B, sha1
   `317a0ead1eee7df22bb1867ae68526c0a04d2ff7`) and `plat6.pt` (task 3, 343,617,075 B, sha1
   `978e7668096ee8affd463ac1b6b2ac58da87ff8e`). Both were copied off the JURECA scratch after the event. `plat6.pt`
-  is far above the Git file size limit, so when this repository carries them they are attached to its release
-  `submitted-files`; otherwise `run_all.sh` rebuilds them in `task1/` and `task3/`. The sha1 above identify the
-  exact files. The task 2 submission is a CSV and is in the repository, at `task2/results/`.
+  is far above the Git file size limit, so both are attached to this repository's release
+  [`submitted-files`](../../releases/tag/submitted-files); `run_all.sh` also rebuilds them in `task1/` and `task3/`,
+  close but not identical. The sha1 above identify the exact files that were scored. The task 2 submission is a CSV
+  and is in the repository, at `task2/results/`.
 - Scores are the public leaderboard values (part of the test data); the final ranking uses the hidden part.
 - Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The released files are the
   ones to use to check our scores directly, without retraining; each `results/` folder states what every submission
