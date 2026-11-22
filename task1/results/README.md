@@ -15,4 +15,6 @@
 | no. 3562 | 0.7754 | 22/11 07:57 | 0.7632 | m3: + second-scale bases with frame |
 | **no. 3606** | **0.7872614154749301** | **22/11 08:13** | **0.7723** | **m5 (`sub_m5.pt`, sha1 317a0ead1e) — best** |
 
+The submitted `sub_m5.pt` (sha1 317a0ead1e…) is attached to the GitHub release `submitted-files` of this repository.
+
 `submissions.csv`: raw journal written by `submit_file.py` from 21/11 22:48 on (sha1 of each file, notes, HTTP status).
