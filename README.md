@@ -7,7 +7,7 @@ not work, and reproducibility notes.
 
 - **Our solutions, in detail**: [task 1](task1/README.md) · [task 2](task2/README.md) · [task 3](task3/README.md)
 - **Pointers to the code that solves each task**: [Where to look](#where-to-look-task-by-task), below
-- **Slides of the presentation**: [`slides/Slides Sevel Labs.pdf`](slides/Slides%20Sevel%20Labs.pdf)
+- **Slides of the presentation**: [`slides/Sevellabs.pdf`](slides/Sevellabs.pdf)
 - **The two model files we submitted**: release [`submitted-files`](../../releases/tag/submitted-files)
 
 | Task | Best public score | Submitted file | Method in one line |
