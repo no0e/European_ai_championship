@@ -149,3 +149,17 @@ final decision rests on the white-box signals.
   `parse.py`, `plan.py`, `plan2.py`, `archive.py`, `api.py`) and one file name (`answers_ep.jsonl`) in
   `whitebox/score.py`. Inline comments and printed messages are in French (the team's working language).
 - The public score covers part of the pairs: 0.85 is not guaranteed on the hidden pairs.
+
+## 8. Generalisation to the hidden pairs
+
+- The final ranking uses the **remaining pairs of the same 33 endpoints**; no new model appears. A placement backed
+  by evidence (section 2) is right or wrong on public and hidden pairs alike, so it transfers.
+- Identifying the checkpoint of each family is not fitted to labels or scores: it selects among two to four
+  candidates by likelihood of the answers, with large gaps (e.g. 0.39 versus 0.82 nat per token for QWEN_B).
+- The exposed part is the eight endpoints placed by public scores (`ep-03`, `ep-07`, `ep-13`, `ep-26`) or by judgement
+  (`ep-19`, `ep-21`, `ep-27`, `ep-32`). Moving one endpoint changes only a few public pairs and the score is returned
+  rounded, so after about twenty submissions the best public score is partly the luckiest: the final score may be
+  lower than 0.85 for this reason.
+- Two endpoints read differently by our two white-box passes: the CPU pass (`task2-whitebox` branch) saw a
+  temperature-1 signature on `ep-28` (alone in the final partition, strong shift in the permutation test) and long
+  answers on `ep-29` (in the main group, verbose system-prompt preamble, which also lengthens answers).
