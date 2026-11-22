@@ -144,8 +144,10 @@ holds in both cases.
 | `src/structure/` | long collection (`api.py`, `plan.py`, `plan2.py`), parsing, permutation tests, dose-effect axis, structures compatible with public scores (`fit.py`, `bayes.py`), CSV writing and submission |
 | `src/whitebox/` | teacher-forcing scoring, simulated quantisation, checkpoint identification, decoding, temperature, fp8 LLR, residuals, repetition rate |
 | `src/decide_partition.py` | final partition from the evidence table |
-| `data/` | the answers we paid for (1,672 black-box, 1,453 long), ref answers, probe lists, features |
+| `data/` | the answers we paid for (1,672 black-box, 1,453 long, 99 high-entropy in `answers_hi_ep.jsonl`), ref answers, probe lists, features |
 | `PITCH.md` | the two-minute pitch of this task |
+| `PROMPTS.md` | the exact text of every prompt sent (scored and ref endpoints), with counts and `max_tokens`; rebuilt by `python3 src/export_prompts.py` |
+| `src/structure/mc_split.py` | overfitting check: Monte Carlo over the unknown public/hidden split, expected hidden-pair score of candidate partitions |
 | `results/` | `submission_final_0.85.csv`, `endpoint_evidence.csv`, `ep_families2.json`, every submitted CSV with its public score (`submissions/`) |
 
 ## 7. Notes
