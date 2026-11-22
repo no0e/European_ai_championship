@@ -6,5 +6,9 @@ mkdir -p "$T2_WORK/blackbox_966" && cd "$T2_WORK/blackbox_966"
 head -966 ../answers_ep.jsonl > answers_ep.jsonl; cp ../ep_features.json .
 PYTHONPATH="$D" $PY "$D/src/blackbox/families2.py" > ../logs/03_families.log 2>&1
 cp ep_families2.json ..
-cmp -s ep_families2.json "$D/results/ep_families2.json" && echo "families identical to the submitted ones" \
-  || echo "WARNING: families differ from results/ep_families2.json"
+# --strip-trailing-cr: json.dump writes CRLF on Windows, the committed file keeps LF.
+if diff -q --strip-trailing-cr ep_families2.json "$D/results/ep_families2.json" > /dev/null; then
+  echo "families identical to the submitted ones"
+else
+  echo "WARNING: families differ from results/ep_families2.json"
+fi

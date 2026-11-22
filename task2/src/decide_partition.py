@@ -10,7 +10,7 @@ This script formalises, after the hackathon, how the 0.85 submission was built f
 Each endpoint left alone gets its own model label. Usage (from $T2_WORK):
   python src/decide_partition.py --evidence results/endpoint_evidence.csv --blackbox submission_blackbox.csv \
          --out submission.csv [--check results/submission_final_0.85.csv]"""
-import argparse, collections, csv, filecmp, os, sys
+import argparse, collections, csv, os, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "structure"))
@@ -57,7 +57,12 @@ def main():
           [r["endpoint"] for r in rows if r["verdict"].startswith("judgement")])
     print("->", a.out)
     if a.check:
-        same = filecmp.cmp(a.out, a.check, shallow=False)
+        # Compared on content, not on bytes: csv.writer ends its lines with CRLF on Windows while the file
+        # committed here keeps LF, so a byte comparison would report a difference that does not exist.
+        def body(path):
+            with open(path, 'rb') as f:
+                return [ln.rstrip() for ln in f.read().splitlines() if ln.strip()]
+        same = body(a.out) == body(a.check)
         print("identical to", a.check, ":", same)
         sys.exit(0 if same else 1)
 

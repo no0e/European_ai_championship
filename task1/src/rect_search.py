@@ -199,6 +199,8 @@ def main():
     idx = idx[si::sn]
     wm = load_watermark(a.method, a.models, a.device)
     if a.method == "stegastamp" and a.ss_torch:
+        # --ss_torch needs `pip install onnx2torch`, left out of requirements.txt on purpose: the submitted
+        # pipeline only searches TrustMark rectangles (StegaStamp ones measured -0.0002, see README section 5).
         wm.torch_dec = stegastamp_torch_decoder(a.models, a.device)
     boxes = grid_boxes(stride=a.stride, ratio=a.ratio)
     print(f"{a.method} : {len(idx)} images, {len(boxes)} fenêtres par image, device {a.device}", flush=True)

@@ -119,6 +119,8 @@ class RealEnv(Env):
 
 class SimEnv(Env):
     def __init__(self, d, dev):
+        # SimEnv is the CIFAR-100 simulator of the night: it expects a sim/ folder (train.py, score.py) that is NOT
+        # part of this repository. Everything submitted runs with --env real (RealEnv below); see README section 7.
         self.dev = dev; self.name = os.path.basename(os.path.normpath(d)); os.chdir(d); sys.path.insert(0, os.path.join(HERE, "sim"))
         import train as tr, score as sc
         self.tr, self.sc = tr, sc; self.build = tr.build

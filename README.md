@@ -129,6 +129,12 @@ stored in this repository.
 - Training in tasks 1 and 3 is stochastic: a re-run gives close but not identical scores. The released files are the
   ones to use to check our scores directly, without retraining; each `results/` folder states what every submission
   contained. Task 2 needs no file — its decision steps rebuild the submitted CSV byte for byte.
+- **What is not included, and does not block anything.** Three options of the shipped code need a module we did not
+  ship, and no step of any pipeline passes them: `rect_search.py --ss_torch` (wants `onnx2torch`; the submission only
+  searches TrustMark rectangles), `score.py --lora` (wants a scratch `lora_util.py`; the LoRA detection we submitted
+  reads token-frequency residuals instead, `--watch 3000` then `resid2.py`), and `k3.py --env sim` (wants a `sim/`
+  folder holding the CIFAR-100 simulator; everything submitted runs `--env real`). Everything `run_all.sh` touches is
+  here.
 - The code is the hackathon code, reorganised: paths became configurable and the cluster-specific launchers were
   replaced by the numbered steps. Every change is listed at the end of each task README. Inline comments and printed
   messages are mostly in French, the team's working language.

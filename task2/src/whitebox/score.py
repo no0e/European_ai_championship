@@ -70,6 +70,9 @@ def main():
     if a.quant != 'none':
         import quant; info = quant.apply(model, a.quant); print('quant', info, flush=True)
     if a.lora:
+        # --lora needs lora_util.py, a scratch module of the night that is NOT part of this repository. The LoRA
+        # detection we actually submitted does not simulate a LoRA: it reads token-frequency residuals
+        # (score.py --watch 3000, then whitebox/resid2.py). Step 07 never passes --lora.
         import lora_util; info['lora'] = lora_util.apply(model, a.lora, a.lora_scale)
     model.to(DEV)
     name = a.repo.lower()
