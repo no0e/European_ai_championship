@@ -1,0 +1,27 @@
+sty_haiku
+sty_sky
+sty_rainy
+sty_cafe
+sty_advice
+sty_fr
+ver_pow
+ver_bin
+ver_strawr
+ver_wall
+ver_gold
+ver_austen
+ver_5th
+ver_sort5
+ver_backwards
+ver_fox
+ver_tobe
+chain_mul2
+chain_mul3
+chain_mul4
+chain_add5
+chain_mod
+chain_steps
+chain_count
+chain_sort
+Complete the sequence with the next number only: 2, 4, 8, 16, 32,
+Compute and answer with the number only: 144 / 12

@@ -1,0 +1,8 @@
+{"t": "2026-11-21T23:34:44", "fichier": "20261121-233444_score0500.csv", "score": 0.5, "note": "22h45 : familles 3x11 + taille 6, ep_features.json, 966 reponses (recuperee de git 9260647)"}
+{"t": "2026-11-22T01:18:57", "fichier": "20261122-011857_score0550.csv", "score": 0.55, "note": "DIAGNOSTIC : QWEN_A découpée comme BEST, LLAMA et QWEN_B tout-différent"}
+{"t": "2026-11-22T01:50:07", "fichier": "20261122-015007_score0350.csv", "score": 0.35, "note": "DIAGNOSTIC : QWEN_B découpée comme le CSV à 0,50, LLAMA et QWEN_A tout-différent"}
+{"t": "2026-11-22T02:21:09", "fichier": "20261122-022109_score0100.csv", "score": 0.1, "note": "DIAGNOSTIC : LLAMA découpée comme le CSV à 0,50, QWEN_A et QWEN_B tout-différent"}
+{"t": "2026-11-22T02:51:33", "fichier": "20261122-025133_score0600.csv", "score": 0.6, "note": "QWEN_A inchangée ; QWEN_B = groupe {03,08,20,21,32}, ep-07 sorti d'après les choix d'outil ; LLAMA = {16,29} seuls regroupés"}
+{"t": "2026-11-22T03:22:06", "fichier": "20261122-032206_score0600.csv", "score": 0.6, "note": "QWEN_B = {07,08,20,21,32} : ep-07 réintégré (erreur de lecture corrigée), ep-03 sorti ; QWEN_A et LLAMA inchangées"}
+{"t": "2026-11-22T03:52:21", "fichier": "20261122-035221_score0600.csv", "score": 0.6, "note": "LLAMA = {09,13,15,16,19,27,29,31} (groupe indiscernable au test par permutation ; 05, 10, 11 isolés) ; QWEN_B = {03,07,08,20,21,32} ; QWEN_A inchangée"}
+{"t": "2026-11-22T07:54:28", "fichier": "20261122-075428_score0850.csv", "score": 0.85, "note": "boîte blanche v1 : QWEN_B = {03,06,07,08,20,21,30} (06 watermark, 30 T=1, 22 fp8 isolé) ; LLAMA = {10,13,16,27,29,31} (15 fp8 isolé) ; QWEN_A inchangée"}

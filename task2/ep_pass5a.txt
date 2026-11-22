@@ -1,0 +1,7 @@
+id_who_strip
+tie_coin
+id_cutoff
+fmt_onechar
+tie_city
+id_who
+chain_mul2
