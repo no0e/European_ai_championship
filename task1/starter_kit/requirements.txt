@@ -1,0 +1,22 @@
+# Python 3.11, tested with torch 2.5.1 + CUDA 12.4 wheels (PyPI default on Linux). Newer torch builds may target
+# a newer CUDA than your driver supports; keep the pin unless you know your driver.
+torch==2.5.1
+torchvision==0.20.1
+numpy
+pillow
+onnxruntime-gpu==1.23.2     # StegaStamp; this version uses the CUDA 12 libraries that come with torch 2.5.1
+onnx                        # download_models.py only (adds the StegaStamp logits output)
+trustmark==0.8.0
+# PixelSeal: videoseal is cloned by download_models.py; its dependencies:
+omegaconf
+einops
+timm
+opencv-python
+scipy
+safetensors
+requests
+pyyaml
+av
+decord
+pycocotools
+tqdm

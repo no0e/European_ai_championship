@@ -1,0 +1,9 @@
+arb_ab
+tie_coin
+tie_city
+tie_animal
+fmt_onechar
+arb_date
+chain_mul2
+Output only the last word: The rain in Spain stays mainly in the plain
+List the first 10 prime numbers, comma separated, nothing else.
