@@ -157,3 +157,33 @@ forgetting from spreading to their transformed versions, which count for half of
   key and URL read from the environment (`submit.py`). Options added to `k3.py` after `ps1` (`--ewc`, `--syn_frac`,
   `--llrd`, `--ema`, `--others_src`) are inactive by default. Inline comments in the code are in French (the team's
   working language).
+
+## 8. Limitations and generalisation to the final ranking
+
+**What the targets assume.** The margin rule `m(x) = mu − sigma · Φ⁻¹(u(x))` is a quantile transform: images are
+ranked by difficulty and given the quantiles of a normal law N(mu, sigma²), so the imposed margins follow that law in
+the order of difficulty. With the selected `mu = −2.5`, `sigma = 7`, the share of forget images whose imposed
+margin stays positive is P(m > 0) = Φ(mu / sigma) = Φ(−0.36) ≈ **0.36** — the targets
+implicitly treat gold as a model with a test accuracy of roughly a third on these images. This number was never
+measured; it follows from settings tuned on the public score.
+
+**What comes from reasoning and what comes from the leaderboard.**
+
+| Part | Origin |
+|---|---|
+| "Forgetting = behaving at test time", rank-based margins, per-image CE term, lowered margin on altered copies, COCO anchors, weight averaging | simulator (known gold), a local diagnostic (`view_stats`), the scoring formula, measured training noise |
+| Values of `mu`, `sigma`, `tb`, `view_delta`, `pos_scale`, number of epochs, share of strong views | axis-by-axis search on the public score (92 team submissions in total) |
+| "Gold's loss on the forget images is about 5.2 ± 4.5" | a simple model of the score fitted on seven public scores |
+
+The simulator gave the structure but not the fine settings: it pointed the wrong way for `tb` and for the
+neighbour-purity ranking.
+
+**Why the leaderboard tuning should transfer, and its limit.**
+- The tuned quantities are a handful of **global** settings applied to every image, not per-image decisions: few
+  degrees of freedom to fit the noise of the public part.
+- Public (about 30 %) and final (about 70 %) scoring data are split by a hash of each image identifier, so both are
+  drawn from the same population.
+- Limit: the best public scores (0.4605, 0.4646, 0.4700) differ by about the training noise (±0.006), and the
+  sampling noise of a 30 % evaluation subset was not measured. Choosing the best of many submissions favours the
+  luckiest one, so the final score may be somewhat lower. The weight average is the least exposed choice: it does not
+  depend on one lucky run.
