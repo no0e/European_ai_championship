@@ -72,7 +72,7 @@ Per family: one base group (the cosmetic variants + the base), the rest isolated
 
 ## 3. What is *not* method: using the leaderboard
 
-It has to be known and said honestly. Between 01:00 and 05:00 the team:
+Between 01:00 and 05:00 the team:
 
 1. **submitted diagnostics**: two families "all different", the third one split, to measure family by family where
    points were lost (01:19, 01:50, 02:21);
@@ -96,7 +96,7 @@ Partition at 0.85, endpoint by endpoint (see [`task2/results/endpoint_evidence.c
 | LLAMA | 10, 13, 16, 27, 29, 31 | 29 (system prompt: verbose preamble), 16 (persona), 10 (watermark, 0.20), 31 (T = 1) | **13** (P = 0.62) | **27** (P = 0.48) |
 | LLAMA | alone: 05, 09, 11, 15, 19 | 05 and 11 (correlated residuals), 15 (fp8), 09 (LoRA dose-effect axis) | — | **19** (P = 0.57) |
 
-**Summary**: 25 endpoints out of 33 are placed by evidence or by a confirmed split, **4** by public scores (03, 07, 13,
+25 endpoints out of 33 are placed by evidence or by a confirmed split, **4** by public scores (03, 07, 13,
 26) and **4** by judgement (21, 32, 27, 19).
 
 ## 5. A point to watch: ep-28 and ep-29
@@ -118,18 +118,7 @@ A second, CPU-only white-box pass read these two endpoints differently from the 
    score somewhat below 0.85.
 3. **The "6 + 5" hypothesis** is not proven for every family: it structures the judgement calls (19, 21, 27, 32).
 
-## 7. In short
-
-- **The core**: "A black-box distance confuses cosmetics and weights. We identified the base model of each family by
-  likelihood, then applied one test per kind of variant, each validated on the reference endpoints. fp8, considered
-  undetectable in black box, shows up in a likelihood ratio against a simulated fp8 version."
-- **The honest part**: "For a handful of endpoints the data could not separate, we used the public scores. We know
-  which ones, and it is the weakest part."
-- **The statistician's angle**: Neyman–Pearson for fp8, maximum likelihood for the temperature, validation on a known
-  truth, and the choice to *absorb* rather than guess, because a grouping error costs fewer pairs than an isolation
-  error.
-
-### Frequent questions
+## 7. Frequent questions
 
 | Question | Short answer |
 |---|---|

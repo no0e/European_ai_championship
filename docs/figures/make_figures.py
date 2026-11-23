@@ -173,7 +173,7 @@ def t1_idea():
         (res_vis, "embed(x, m) − x\n(official embedder, amplified)"),
         (np.where(M[..., None], [0.16, 0.47, 0.84], [0.93, 0.92, 0.9]), "random mask  M\n(real hole statistics)"),
         (tint(y, M, BLUE, 0.0), "training image\ny = M·embed(x, m) + (1−M)·x"),
-        (np.where(down128(M)[..., None], [0.16, 0.47, 0.84], [0.93, 0.92, 0.9]), "exact label\n128 × 128, for free"),
+        (np.where(down128(M)[..., None], [0.16, 0.47, 0.84], [0.93, 0.92, 0.9]), "label\n128 × 128"),
     ]
     for ax, (im, t) in zip(axes, panels):
         ax.imshow(im, interpolation="nearest")
@@ -182,7 +182,7 @@ def t1_idea():
     for i, sym in [(0, "→"), (1, "×"), (2, "→"), (3, "→")]:
         fig.text((axes[i].get_position().x1 + axes[i + 1].get_position().x0) / 2, 0.5, sym, ha="center",
                  va="center", fontsize=20, color=INK2)
-    fig.text(0.125, 1.04, "The founding idea: the kit ships the exact embedders, so we can make unlimited perfect training data",
+    fig.text(0.125, 1.04, "Synthetic training pairs built with the official embedder",
              fontsize=12.5, fontweight="semibold")
     fig.text(0.125, 0.97, "The residual shown is an illustration (a texture-modulated noise), not the real PixelSeal signal.",
              fontsize=9.5, color=INK2)
@@ -231,7 +231,7 @@ def t1_metric():
            f"IoU(clean)          = {(~gt & ~pred).sum()} / {(~gt | ~pred).sum()} = {iou0:.2f}\n"
            f"score of this image = ({iou1:.2f} + {iou0:.2f}) / 2 = {(iou1 + iou0) / 2:.2f}")
     ax.text(n + 0.8, 9, txt, va="top", fontsize=10.5, family="DejaVu Sans Mono", color=INK)
-    fig.text(0.125, 1.0, "How one image is scored: mean IoU of the two classes, on a 128 × 128 grid (here 16 × 16)",
+    fig.text(0.125, 1.0, "Mean IoU of the two classes on one image (16 × 16 grid for readability; the task uses 128 × 128)",
              fontsize=12.5, fontweight="semibold")
     save(fig, "t1_metric.png")
 
@@ -247,14 +247,14 @@ def t1_frame():
     ax.imshow(astro)
     ax.add_patch(Rectangle((0, 0), H - 1, H - 1, fill=False, ec=ORANGE, lw=3))
     bare(ax)
-    ax.set_title("What we assumed:\nwatermark computed on the image itself", loc="center", fontsize=10.5,
+    ax.set_title("Watermark computed\non the image itself", loc="center", fontsize=10.5,
                  fontweight="medium")
     ax = axes[1]
     ax.imshow(big)
     ax.add_patch(Rectangle((-0.5, -0.5), F, F, fill=False, ec=BLUE, lw=3))
     ax.add_patch(Rectangle((off, off), H, H, fill=False, ec=INK, lw=1.5, ls="--"))
     bare(ax)
-    ax.set_title(f"What the data says: computed on a\nlarger frame (≈ {s:.2f}×), then cropped",
+    ax.set_title(f"Watermark computed on a larger\nframe (≈ {s:.2f}×), then cropped",
                  loc="center", fontsize=10.5, fontweight="medium")
     ax = axes[2]
     xs = [0, 1]
@@ -274,8 +274,8 @@ def t1_frame():
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
     ax.legend(frameon=False, fontsize=9.5, loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2)
-    ax.set_title("Effect, measured (cross-validation)", loc="left")
-    fig.text(0.125, 1.03, "The key discovery of the night: the watermarked frame is larger than the image",
+    ax.set_title("Cross-validated mIoU", loc="left")
+    fig.text(0.125, 1.03, "Watermarked frame larger than the image",
              fontsize=12.5, fontweight="semibold")
     save(fig, "t1_frame.png")
 
@@ -307,8 +307,8 @@ def t1_progress():
     pts = [("Sat\n16:50", 0.453), ("18:10", 0.489), ("21:30", 0.594), ("21:54", 0.713), ("22:48", 0.738),
            ("23:10", 0.746), ("Sun\n00:47", 0.747), ("06:10", 0.747), ("07:36", 0.756), ("07:47", 0.771),
            ("07:57", 0.775), ("08:13", 0.787)]
-    progress("t1_progress.png", "Task 1 — public score over the night (mIoU, higher is better)", pts,
-             "0.787  final ensemble", (0.4, 0.82),
+    progress("t1_progress.png", "Task 1: public score over time (mean IoU)", pts,
+             "0.787", (0.4, 0.82),
              annotate=[(0, "decoder heat-map + threshold", -26), (3, "first dense detector", -34),
                        (8, "larger frame", -38), (9, "+ second scale", -30)])
 
@@ -367,7 +367,7 @@ def t2_partition():
         w = 1.0
         ax.add_patch(FancyBboxPatch((gx - 0.08, y0 - 0.38), len(main) * w + 0.06, 0.76,
                                     boxstyle="round,pad=0.02,rounding_size=0.12", fc="none", ec=col, lw=2))
-        ax.text(gx - 0.05, y0 + 0.46, "one model (same weights)", fontsize=9, color=INK2)
+        ax.text(gx - 0.05, y0 + 0.46, "same model", fontsize=9, color=INK2)
         for k, e in enumerate(main):
             cx = gx + k * w + w / 2 - 0.05
             ax.add_patch(FancyBboxPatch((cx - 0.42, y0 - 0.3), 0.84, 0.6,
@@ -375,7 +375,7 @@ def t2_partition():
             ax.text(cx, y0 + 0.07, e, ha="center", va="center", color="white", fontsize=10, fontweight="semibold")
             ax.text(cx, y0 - 0.15, kind(e), ha="center", va="center", color="white", fontsize=7.5)
         ax2 = gx + len(main) * w + 0.6
-        ax.text(ax2 - 0.05, y0 + 0.46, "each one a different model", fontsize=9, color=INK2)
+        ax.text(ax2 - 0.05, y0 + 0.46, "separate models", fontsize=9, color=INK2)
         for k, e in enumerate(alone):
             cx = ax2 + k * w + w / 2 - 0.05
             ax.add_patch(FancyBboxPatch((cx - 0.42, y0 - 0.3), 0.84, 0.6,
@@ -384,7 +384,7 @@ def t2_partition():
             ax.text(cx, y0 - 0.15, kind(e), ha="center", va="center", color=INK2, fontsize=7.5)
     ax.set_xlim(-0.4, 15.4)
     ax.set_ylim(-0.6, 3.1)
-    ax.set_title("Task 2 — our final answer: 33 endpoints, 3 families, one main group per family", pad=14)
+    ax.set_title("Task 2: final partition of the 33 endpoints", pad=14)
     fig.text(0.125, 0.04, "Under each endpoint, the evidence that placed it ('scores' and 'judgement' "
              "mark the 8 endpoints no test could settle; T = 1: temperature-1 decoding; blank: black-box split).",
              fontsize=9.5, color=INK2)
@@ -404,7 +404,7 @@ def t2_trap():
     ax.set_xlabel("black-box distance from the plain model")
     ax.grid(axis="x", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.set_title("The trap: a disguise looks farther away than a real change")
+    ax.set_title("Black-box distance to the plain model (practice endpoints)")
     ax = axes[1]
     fams = ["QWEN_B", "QWEN_A", "ref (practice)"]
     right = [0.39, 0.35, 0.94]
@@ -424,16 +424,16 @@ def t2_trap():
     ax.legend(frameon=False, fontsize=9.5, loc="upper right")
     ax.grid(axis="x", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.set_title("The way out: identify the exact checkpoint by likelihood")
+    ax.set_title("Checkpoint identification by likelihood")
     save(fig, "t2_trap.png")
 
 
 def t2_progress():
     pts = [("Sat\n21:45", 0.00), ("22:15", 0.05), ("22:45", 0.50), ("23:15", 0.10), ("Sun\n02:51", 0.60),
            ("03:22", 0.60), ("03:52", 0.60), ("07:54", 0.85)]
-    progress("t2_progress.png", "Task 2 — public score of our regular submissions (diagnostic probes left out)", pts,
-             "0.85  white box", (-0.05, 1.0),
-             annotate=[(2, "3 families found", 16), (3, "identity probes polluted the distance", -30),
+    progress("t2_progress.png", "Task 2: public score over time (diagnostic submissions excluded)", pts,
+             "0.85", (-0.05, 1.0),
+             annotate=[(2, "3 families found", 16), (3, "identity probes added", -30),
                        (4, "long collection", 16)])
 
 
@@ -444,9 +444,9 @@ def t3_idea():
     x = np.linspace(0, 14, 600)
     fig, ax = plt.subplots(figsize=(11, 3.8))
     curves = [
-        ("original model: memorised, tiny losses", 0.15, 0.12, INK2, "-"),
-        ("naive unlearning (gradient ascent): uniformly wrong", 9.5, 0.9, ORANGE, "--"),
-        ("target (gold): like unseen test images, wide spread", 5.2, 4.5, BLUE, "-"),
+        ("original model", 0.15, 0.12, INK2, "-"),
+        ("gradient ascent", 9.5, 0.9, ORANGE, "--"),
+        ("gold (retrained without the images)", 5.2, 4.5, BLUE, "-"),
     ]
     for lab, mu, sd, c, ls in curves:
         if sd > 3:
@@ -463,7 +463,7 @@ def t3_idea():
     ax.set_xlim(0, 14)
     ax.set_ylim(0, 1.15)
     ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0.12, 1.0), fontsize=10)
-    ax.set_title("What 'forgetting' means here: match the whole loss distribution of a model that never saw the images")
+    ax.set_title("Per-image loss on the forget set")
     fig.text(0.125, -0.09, "Schematic shapes. The gold mean ≈ 5.2 and spread ≈ 4.5 are estimates from a model of the "
              "public scores, not measurements.", fontsize=9.5, color=INK2)
     save(fig, "t3_idea.png")
@@ -480,8 +480,8 @@ def t3_targets():
     ax.plot(u, m_ps, color=BLUE, lw=2)
     ax.fill_between(u, m_ps, 0, where=m_ps > 0, color=AQUA, alpha=0.18)
     ax.fill_between(u, m_ps, 0, where=m_ps < 0, color=ORANGE, alpha=0.15)
-    ax.text(0.42, 3.5, "still classified correctly,\nbut less confidently", fontsize=9.5, color=INK2)
-    ax.text(0.08, -19, "pushed to a wrong class,\nthe harder the image, the further", fontsize=9.5, color=INK2)
+    ax.text(0.42, 3.5, "still correct,\nlower confidence", fontsize=9.5, color=INK2)
+    ax.text(0.08, -19, "wrong class, margin\ngrows with difficulty", fontsize=9.5, color=INK2)
     for uu in (0.1, 0.5, 0.9):
         mm = mu - sigma * norm.ppf(uu)
         mm = 0.5 * mm if mm > 0 else mm
@@ -505,7 +505,7 @@ def t3_targets():
     ax.legend(frameon=False, fontsize=9.5)
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.set_title("One target per image: only the original class moves")
+    ax.set_title("Example target for one image")
     ax.text(0.98, 0.62, "example: a median image (u = 0.5)\nmargin set to −2.5 → now predicted 'lantern'",
             transform=ax.transAxes, ha="right", fontsize=9.5, color=INK2)
     save(fig, "t3_targets.png")
@@ -514,10 +514,10 @@ def t3_targets():
 def t3_progress():
     pts = [("Sat\n17:13", 0.024), ("22:58", 0.150), ("23:37", 0.259), ("Sun\n00:48", 0.352), ("03:02", 0.381),
            ("03:32", 0.448), ("06:06", 0.461), ("07:19", 0.465), ("07:59", 0.470)]
-    progress("t3_progress.png", "Task 3 — public score over the night (forget × retain, higher is better)", pts,
-             "0.470  average of 6 models", (0, 0.55),
-             annotate=[(0, "output softening", 16, -8), (1, "SCRUB", 16, -8), (2, "our targets, first try", -30),
-                       (4, "altered copies fixed", -30)])
+    progress("t3_progress.png", "Task 3: public score over time (forget × retain)", pts,
+             "0.470", (0, 0.55),
+             annotate=[(0, "output softening", 16, -8), (1, "SCRUB", 16, -8), (2, "rank-based targets", -30),
+                       (4, "altered copies", -30)])
 
 
 def t3_average():
@@ -535,7 +535,7 @@ def t3_average():
     ax.set_xlabel("public score")
     ax.grid(axis="x", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.set_title("Averaging the weights of six models beats every one of them")
+    ax.set_title("Weight average of six models and each model alone")
     fig.text(0.125, -0.1, "The sixth model (ps10, another seed of ps1) was not submitted alone.", fontsize=9.5,
              color=INK2)
     save(fig, "t3_average.png")

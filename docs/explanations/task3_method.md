@@ -23,8 +23,7 @@ The score multiplies two terms:
 
 **The naive mistake**: push the loss up on the images to forget (gradient ascent, SCRUB pushed hard). The model gets
 them wrong, but **too much and too uniformly**. The SCRUB paper says it in its own way (§ 3.2, SCRUB+R): an
-abnormally high error on forgotten examples makes them identifiable. A Streisand effect: an example forgotten "too
-hard" stands out.
+abnormally high error on forgotten examples makes them identifiable.
 
 **What gold does**: it never saw these images, so for gold they are **test images**. It gets some right, others
 wrong, with **large and widely spread** losses (around 5 ± 4.5 according to a model of the score fitted on seven
@@ -108,13 +107,13 @@ the same point and stay close to it; with twelve, 0.469: no further gain.)
 | Values μ = −2.5, σ = 7, tb = 1.4, view_delta 4.5, pos_scale 0.5, 30 epochs, 35 % strong views | **axis-by-axis search on the public score** | tuned on the leaderboard |
 | "Gold's loss is around 5.2 ± 4.5" | model of the score fitted on 7 submissions | **inferred from the leaderboard** |
 
-**The honest point**: the structure comes from reasoning and a simulator; the **fine settings** come from the
+the structure comes from reasoning and a simulator; the **fine settings** come from the
 leaderboard. The simulator even pointed the other way for `tb` (squeeze the other logits), and the leaderboard
 contradicted it (tb 1.0: 0.431; 1.4: 0.448). 92 submissions in total.
 
 ## 5. Is this leaderboard overfitting?
 
-**Less than for task 2, and here is why.**
+Less than for task 2, for the following reasons.
 
 - **What is tuned is global.** About ten parameters applied to every image, not an image-by-image decision. Few
   degrees of freedom, so little room to fit the noise of the public part.
@@ -124,7 +123,7 @@ contradicted it (tb 1.0: 0.431; 1.4: 0.448). 92 submissions in total.
 - **Compared with task 2**: there, the leaderboard decided the place of **specific endpoints**, which can only be
   checked on the public half of the pairs.
 
-**But two risks remain.**
+Two risks remain.
 
 1. **The winner's curse.** Among 92 submissions, the best is partly the luckiest. The gaps between the best ones
    (0.461, 0.465, 0.470) are of the same order as the training noise (±0.006). The noise of the **evaluation** on 30 %
@@ -144,17 +143,7 @@ contradicted it (tb 1.0: 0.431; 1.4: 0.448). 92 submissions in total.
 | Same wrong class for every copy of an image | 0.345 | the wrong class must be read on each copy |
 | 50 epochs instead of 30 | 0.403 | fitting the targets better makes the rest drift: retain costs more than the fit brings |
 
-## 7. In short
-
-- **The core**: "Forgetting is not being wrong: it is behaving like a model that sees these images for the first time.
-  We set a target margin for each image by a quantile transform of its difficulty rank, then distil, aiming at both
-  the predicted distribution and the loss distribution, on the images and on their altered copies."
-- **The statistician's angle**: quantile transform, one loss term per moment the scoring measures (mean and standard
-  deviation), model averaging to reduce variance, a simulator to get a ground truth.
-- **The honest part**: "The structure comes from the simulator; the fine settings come from the public score, a
-  limited risk because they are global and public and final data come from the same population."
-
-### Frequent questions
+## 7. Frequent questions
 
 | Question | Short answer |
 |---|---|

@@ -1,69 +1,55 @@
-# Task 1 — Where is the watermark?
+# Task 1: watermark localisation
 
-**Public score 0.787** (mean IoU) · task statement: [summary](../docs/tasks/task1_watermark_localisation.md) ·
-paper it builds on: [Pixel Seal](../docs/papers/pixel_seal.md)
+Public score: 0.787 (mean IoU). Task statement: [summary](../docs/tasks/task1_watermark_localisation.md).
+Related paper: [Pixel Seal](../docs/papers/pixel_seal.md).
 
-> Images were invisibly watermarked, then edited. Find, pixel block by pixel block, which parts still carry the
-> watermark — using watermarking methods that were only ever trained to read a message from the *whole* image.
+## Task
 
-## The task in pictures
-
-Every image was watermarked with one of three public methods (**PixelSeal**, **TrustMark**, **StegaStamp**), then
-edited by a generative model in one of four ways. Our answer is a **128 × 128 grid** per image (one cell = 4 × 4
-pixels), 1 where the watermark is still present.
+Each image was watermarked with one of three post-hoc methods (PixelSeal, TrustMark, StegaStamp), then edited by a
+generative model in one of four ways. For each test image, the expected output is a 128 × 128 grid (one cell = 4 × 4
+pixels) marking the cells that still carry the watermark.
 
 ![The four kinds of edit and the mask to predict](../docs/figures/t1_edits.png)
 
-Why it matters: if a watermark cannot be localised, an edit made by someone else is attributed to the watermark
-owner — a third party could add harmful content to a watermarked image and frame its author.
+The three methods are trained to decode one message from the whole image, not to say where the watermark is. Edited
+regions range from half the image to a thin object. Data: 510 training images with masks, 1,020 test images.
 
-Why it is hard: these methods decode one message from the whole image; none of them was built to say *where* the
-watermark is. The edited regions range from half the image to a thin object, and the three methods behave very
-differently. We had 510 training images with their masks, and 1,020 test images.
-
-### How it is scored
+Scoring: for each image, the mean of the IoU of the two classes (watermarked, clean), then the average over images.
+A small object counts as much as a large area, and a constant prediction is capped at 0.5 per image.
 
 ![Mean IoU on one image](../docs/figures/t1_metric.png)
 
-The score of an image is the mean of the IoU of the two classes (watermarked, clean); the final score is the average
-over all test images, so a small object counts as much as a large area. Predicting "all watermarked" caps an image
-at 0.5.
+## Method
 
-## Our solution
+The starter kit includes the exact embedders of the three methods. An edited image can be written
+`y = M · embed(x, m) + (1 − M) · x`, so exact training pairs can be generated in any quantity. We trained one dense
+detector per method on such pairs, then fine-tuned it on the real training images.
 
-### The founding idea: unlimited, perfectly labelled training data
-
-The organisers' kit ships the **exact embedders** of the three methods. Since an edited image is
-`y = M · embed(x, m) + (1 − M) · x`, we can create as many training examples as we want, with a perfect label, and
-train a **dense detector** per method that says "watermarked / not watermarked" for every cell — no message needed.
-
-![Building exact synthetic training pairs](../docs/figures/t1_idea.png)
+![Synthetic training pairs](../docs/figures/t1_idea.png)
 
 ```mermaid
 flowchart LR
     A["Clean images<br/>(other methods' images, DIV2K)"] --> B["Official embedder<br/>+ random masks"]
-    B --> C["Exact synthetic pairs<br/>image → 128×128 label"]
-    C --> D["Dense detector per method<br/>backbone = the watermark decoder itself"]
-    D --> E["Fine-tuning on the 510 real<br/>images (5-fold CV)"]
-    E --> F["Ensemble + guided filter<br/>decision rule chosen out of fold"]
-    G["TrustMark: re-read the message<br/>in candidate crops"] --> H
+    B --> C["Synthetic pairs<br/>image, 128×128 label"]
+    C --> D["Dense detector per method<br/>(decoder as backbone)"]
+    D --> E["Fine-tuning on the 510<br/>real images, 5-fold CV"]
+    E --> F["Ensemble, guided filter,<br/>decision rule chosen out of fold"]
+    G["TrustMark: message re-read<br/>in candidate crops"] --> H
     F --> H["Final masks<br/>sub_m5.pt"]
 ```
 
-Two choices made the difference:
-- **The backbone is the watermark decoder itself** (PixelSeal's ConvNeXt-V2, TrustMark's ResNet-50): it already
-  "sees" the invisible signal. A generic ImageNet backbone learns nothing on PixelSeal (AUC 0.5).
-- **Every decision was taken on a paired 5-fold cross-validation**, never on the public score — the public score
-  followed the CV at about 0.7 times the gain.
+- The backbone of each detector is the watermark decoder itself (ConvNeXt-V2 for PixelSeal, ResNet-50 for
+  TrustMark). A generic ImageNet backbone did not learn anything on PixelSeal (AUC 0.5).
+- Decisions were taken on a paired 5-fold cross-validation, not on the public score. The public score moved by about
+  0.7 times the CV gain.
 
-### The key discovery of the night: a larger frame
+### Watermarked frame larger than the image
 
-During the night our synthetic data still did not look like the real images (0.711 on synthetic versus 0.561 on real
-PixelSeal holes). The cause: each image had been watermarked on a **frame larger than the image**, then
-cropped it. Once our generator did the same, a model trained **without any real image** beat our best ensemble
-fine-tuned on real images.
+Our synthetic pairs scored 0.711 against 0.561 on real PixelSeal holes. The difference came from how the official
+images were made: the watermark was computed on a frame larger than the image, then cropped. Generating our pairs the
+same way, a model trained without any real image did better than the previous ensemble fine-tuned on real images.
 
-![The watermarked frame is larger than the image](../docs/figures/t1_frame.png)
+![Watermark computed on a larger frame](../docs/figures/t1_frame.png)
 
 - The recomputed message pattern `embed(y, m) − embed(y, m̄)` correlates with the real image only if the image is
   completed by reflection up to a frame of side s × 512, s between 1.02 and 1.17, with any offset; about 16 % of the
@@ -76,7 +62,7 @@ fine-tuned on real images.
 - Second scale and frame add up: PixelSeal full ≈ 0.71, TrustMark full ≈ 0.68, objects ≈ 0.74, StegaStamp full ≈ 0.94
   in CV.
 
-### The building blocks, in detail
+### Components in detail
 
 1. **Dense detector per method** (`src/dense/train_dense.py`, `common.py`). The backbone is **the watermark decoder
    itself** (PixelSeal: ConvNeXtV2; TrustMark: ResNet-50) or an ImageNet ConvNeXt-tiny (StegaStamp), followed by an FPN
@@ -101,7 +87,7 @@ fine-tuned on real images.
 8. **Ensemble m5**: second-scale + frame models fine-tuned in CV (k6) and their bases (k6b), frame base k5b,
    second-scale models v6/v6p (and v7, v7p, v8, see the reproducibility notes); StegaStamp: v3, v4, frame base k5b and k5.
 
-## Results over the night
+## Results
 
 ![Public score over the night](../docs/figures/t1_progress.png)
 
@@ -160,8 +146,7 @@ never on the public score (30 % of the test, ±0.005 noise). The public score fo
 
 ## Reproducing
 
-This repository is first a write-up of our work; the code is the hackathon code, reorganised so that it can be
-re-run on a GPU node with the official data.
+The code is the hackathon code, reorganised so that it can be re-run on a GPU node with the official data.
 
 <details>
 <summary><b>Quick start</b></summary>

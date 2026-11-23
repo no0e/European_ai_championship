@@ -1,58 +1,56 @@
-# Task 3 — Has the model really forgotten?
+# Task 3: machine unlearning
 
-**Public score 0.470** (forget × retain) · task statement: [summary](../docs/tasks/task3_unlearning.md) ·
-paper it builds on: [SCRUB](../docs/papers/scrub_unlearning.md) ·
-method explained: [long version](../docs/explanations/task3_method.md)
+Public score: 0.470 (forget × retain). Task statement: [summary](../docs/tasks/task3_unlearning.md). Related paper:
+[SCRUB](../docs/papers/scrub_unlearning.md). Longer explanation: [method note](../docs/explanations/task3_method.md).
 
-> Make an image classifier forget 3,500 of its training images, so that it behaves exactly like a model that never
-> saw them — without retraining, without labels, and without breaking anything else.
+## Task
 
-## The task in pictures
+Starting from a ViT-B/16 trained on 100 classes, produce a model that behaves as if it had never seen 3,500 given
+training images (labels not provided), while staying close to the original elsewhere. The reference ("gold") is the
+average of several models retrained without those images.
 
 ```mermaid
 flowchart LR
-    O["Original ViT-B/16<br/>trained on everything"] --> U{"our unlearning"}
-    F["3,500 images to forget<br/>(no labels)"] --> U
+    O["Original ViT-B/16"] --> U["Unlearning"]
+    F["3,500 images to forget"] --> U
     U --> S["Submitted model"]
-    G["Gold: models retrained<br/>without the 3,500 images<br/>(hidden)"] -.->|compared with| S
-    S --> SC["score = forget × retain<br/>0 if accuracy < 70 %"]
+    G["Gold models (hidden),<br/>retrained without the images"] -.->|compared with| S
+    S --> SC["forget × retain<br/>0 if accuracy < 70 %"]
 ```
 
-- **Forget**: on the 3,500 images *and* on hidden altered copies of them, the submitted model must have the same loss
-  distribution (mean **and** spread) and the same per-image predictions as gold.
-- **Retain**: everywhere else, it must stay as accurate as, and as close as possible to, the original model.
-- Submitting the original model unchanged scores 0; destroying it scores 0 too.
+- Forget score: on the 3,500 images and on hidden altered copies, the mean and standard deviation of the per-image
+  loss, and the per-image predictions, must match gold.
+- Retain score: accuracy and output similarity to the original model on a hidden control set.
+- The unchanged original model scores 0.
 
-**The trap.** "Forgetting" does not mean "getting the images wrong". For gold, these 3,500 images are just test
-images: it still recognises the easy ones, gets the hard ones wrong, and its losses are widely spread. A model pushed
-to be wrong everywhere is as easy to spot as one that remembers everything.
+For gold, the forget images are unseen data: some are still classified correctly, others not, and the losses are
+widely spread. A model that is wrong on all of them does not match it.
 
-![What forgetting means here](../docs/figures/t3_idea.png)
+![Per-image loss on the forget set](../docs/figures/t3_idea.png)
 
-## Our solution
+## Method
 
-**Idea in three sentences.** On the forget images, gold behaves like a model at test time. So for every image we
-build a **target**: the original logits in which only the logit of the original class is lowered — the harder the
-image, the more. Then we **distil** towards these targets, on the images and on altered copies of them, while
-holding the model in place everywhere else.
+For each image we build a target: the original logits with only the original-class logit lowered, by a margin that
+depends on the image's difficulty rank. The model is then distilled towards these targets on the images and on
+altered copies, with anchor images keeping it close to the original elsewhere. Six such models are averaged in weight
+space.
 
 ![Rank-based targets](../docs/figures/t3_targets.png)
 
 ```mermaid
 flowchart LR
-    A["Original model's margin<br/>on each image + 4 views"] --> B["Difficulty rank u"]
+    A["Original margin per image<br/>(clean + 4 views)"] --> B["Difficulty rank u"]
     B --> C["Target margin<br/>m = μ − σ·Φ⁻¹(u)"]
-    C --> D["Distillation 30 epochs<br/>KL at T = 2 + per-image loss term"]
-    E["Altered copies<br/>(pushed further)"] --> D
-    F["5,000 COCO anchors<br/>(stay = original)"] --> D
-    D --> G["6 models, one plateau<br/>of settings"]
-    G --> H["Weight average<br/>0.470"]
+    C --> D["Distillation, 30 epochs<br/>KL at T = 2 + per-image loss term"]
+    E["Altered copies"] --> D
+    F["5,000 COCO anchors"] --> D
+    D --> G["6 models"]
+    G --> H["Weight average"]
 ```
 
-How we found it: a **simulator** — a ViT trained from scratch on CIFAR-100, with the same forget-set structure, four
-retrained "golds" and the exact scoring — gave us a ground truth to experiment with, without spending submissions.
-It showed that setting the margin by difficulty is worth 0.37–0.46 of forgetting there, against 0.04 for simply
-softening the outputs.
+The structure of the method was found on a simulator: a ViT trained from scratch on CIFAR-100 with the same
+forget-set structure, four retrained gold models and the exact scoring. There, setting the margin by difficulty gave
+a forget score of 0.37 to 0.46, against 0.04 for softening all outputs.
 
 ### Rank-based margin targets — `src/tg.py`
 
@@ -89,7 +87,7 @@ real level of the setting: **0.470** versus 0.459–0.465 for each model. Averag
 
 ![Weight averaging](../docs/figures/t3_average.png)
 
-## Results over the night
+## Results
 
 ![Public score over the night](../docs/figures/t3_progress.png)
 
