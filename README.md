@@ -5,16 +5,39 @@ Team **Sevel Labs ENSAI**. Code of our best submission for each of the three tas
 whole pipeline from the official data to the submitted file, and a README with the method, how we got there, what did
 not work, and reproducibility notes.
 
+- **The context**: the event, its rules and how we worked — [`docs/context.md`](docs/context.md)
+- **The three task statements**, summarised: [task 1](docs/tasks/task1_watermark_localisation.md) ·
+  [task 2](docs/tasks/task2_model_equality.md) · [task 3](docs/tasks/task3_unlearning.md)
+- **The research papers** behind each task, with our reading notes: [`docs/papers/`](docs/papers/README.md)
+- **Courses and explanations** (in French): [`docs/courses/`](docs/courses/README.md)
 - **Our solutions, in detail**: [task 1](task1/README.md) · [task 2](task2/README.md) · [task 3](task3/README.md)
 - **Pointers to the code that solves each task**: [Where to look](#where-to-look-task-by-task), below
 - **Slides of the presentation**: [`slides/Sevellabs.pdf`](slides/Sevellabs.pdf)
 - **The two model files we submitted**: release [`submitted-files`](../../releases/tag/submitted-files)
 
-| Task | Best public score | Submitted file | Method in one line |
-|---|---|---|---|
-| [Task 1 — Watermark localisation](task1/README.md) | **0.7872614154749301** | `sub_m5.pt` | one dense detector per method, trained on exact composites made with the official embedders (on a **watermarked frame larger than the image**), second scale, CV fine-tuning on real images, ensemble + guided filter + TrustMark rectangles |
-| [Task 2 — Model equality testing](task2/README.md) | **0.85** | `results/submission_final_0.85.csv` | families read on habits of the base model, then **white box**: local checkpoints identified, watermark / temperature / fp8 / LoRA recognised by teacher forcing of the answers already collected |
-| [Task 3 — Unlearning](task3/README.md) | **0.4700011591814447** | `plat6.pt` | rank-based margin targets + distillation matched on per-image loss, **weight average** of six models |
+| Task | Paper it builds on | Best public score | Submitted file | Method in one line |
+|---|---|---|---|---|
+| [Task 1 — Watermark localisation](task1/README.md) | [Pixel Seal](docs/papers/pixel_seal.md) | **0.7872614154749301** | `sub_m5.pt` | one dense detector per method, trained on exact composites made with the official embedders (on a **watermarked frame larger than the image**), second scale, CV fine-tuning on real images, ensemble + guided filter + TrustMark rectangles |
+| [Task 2 — Model equality testing](task2/README.md) | [Model Equality Testing](docs/papers/model_equality_testing.md) | **0.85** | `results/submission_final_0.85.csv` | families read on habits of the base model, then **white box**: local checkpoints identified, watermark / temperature / fp8 / LoRA recognised by teacher forcing of the answers already collected |
+| [Task 3 — Unlearning](task3/README.md) | [SCRUB](docs/papers/scrub_unlearning.md) | **0.4700011591814447** | `plat6.pt` | rank-based margin targets + distillation matched on per-image loss, **weight average** of six models |
+
+## The challenge in short
+
+The [European AI Championship](docs/context.md) is a series of 24-hour competitions on AI and security led by CISPA;
+the tasks are written by its SprintML group. At the Paris stage, three tasks, each built on a paper the organisers
+asked us to read beforehand, each about **auditing a machine-learning system**:
+
+1. **Where is the watermark?** Images watermarked with PixelSeal, TrustMark or StegaStamp were then edited
+   (outpainting, objects removed, added or transplanted). Find, on a 128×128 grid, which parts still carry the
+   watermark — with methods that were only ever trained to decode one message from the whole image.
+2. **Which model does this API serve?** 33 LLM endpoints, disguised by system prompts, personas, watermarks and
+   decoding settings, some of them quantised or carrying LoRA adapters. Group them by family and by identical
+   weights, with 100 answers per endpoint for the whole event.
+3. **Has the model really forgotten?** Make a ViT-B/16 forget 3,500 unlabelled training images so that it behaves
+   like models retrained without them — on the images and on altered copies — while staying close to the original
+   everywhere else.
+
+The public leaderboard used part of the test data; the final ranking uses the hidden part.
 
 ## Where to look, task by task
 
@@ -73,6 +96,15 @@ taskN/
   slurm/           example batch script for a Slurm cluster
   results/         what we submitted and the scores obtained
   requirements.txt
+```
+Next to the task folders:
+```
+docs/
+  context.md       the event, its rules, the timeline, how we worked
+  tasks/           the three official task statements, summarised, and what each implied for us
+  papers/          the three recommended papers: reading notes, links, and the CC BY one in PDF
+  courses/         beginner's courses on the papers, our methods explained, toy scripts (French)
+slides/            the deck of the final presentation
 ```
 Task 2 also ships `data/`: the answers we paid for (they cannot be bought again), so its decision steps run on CPU in
 about two minutes and rebuild the submitted CSV byte for byte.
