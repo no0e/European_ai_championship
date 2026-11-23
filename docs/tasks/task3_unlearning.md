@@ -11,6 +11,8 @@ trained on those images**, while still performing well on the rest of the data.
 
 ## Why it is hard
 
+![What forgetting means](../figures/t3_idea.png)
+
 A model damaged on the forget set (for example by naive gradient ascent) can have low accuracy there without having
 forgotten anything meaningful: its behaviour on those images stays clearly distinguishable from a model that never
 saw them. The target is a model **retrained from scratch without the forget set**: not only its confidence on the

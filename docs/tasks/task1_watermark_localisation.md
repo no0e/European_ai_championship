@@ -22,6 +22,8 @@ party frame that owner by adding undesirable content to a watermarked image.
 
 ## The four kinds of edit
 
+![The four kinds of edit](../figures/t1_edits.png)
+
 | Edit | Where the watermark is |
 |---|---|
 | Outpainting — a watermarked image extended into a larger one | the original image only, as a rectangle |
@@ -43,6 +45,8 @@ intermediate feature maps), bit accuracy, the exact mask downsampling, a local m
 template. Its code is shipped in [`task1/src/starter_kit/`](../../task1/src/starter_kit/).
 
 ## Metric
+
+![Mean IoU on one image](../figures/t1_metric.png)
 
 Masks are scored on a **128×128 grid** (one cell = 4×4 pixels); a ground-truth cell is 1 if at least half of its
 pixels are watermarked. Per image, for each class c ∈ {0, 1}:

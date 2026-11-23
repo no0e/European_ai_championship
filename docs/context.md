@@ -49,8 +49,8 @@ attributed to the watermark owner), finding *which* model an API really serves, 
 ## How we worked
 
 - **Preparation** (the week before): reading notes and a beginner's course on each recommended paper, toy
-  implementations of the core ideas, and a GPU setup tested on the cluster. The courses are in
-  [courses/](courses/README.md).
+  implementations of the core ideas (see [explanations/](explanations/README.md)), and a GPU setup tested on
+  the cluster.
 - **During the 22 hours**: one rule for all three tasks, which is also the title of our slides: **measure before tuning** — a local metric identical to
   the official one (task 1), endpoints with a known answer (task 2's `ref-01`…`ref-09`), a simulator with a known
   gold model (task 3).
@@ -61,9 +61,9 @@ attributed to the watermark owner), finding *which* model an API really serves, 
 
 | Task | Best public score |
 |---|---|
-| 1 — Watermark localisation | 0.7872614154749301 |
+| 1 — Watermark localisation | 0.787 |
 | 2 — Model equality testing | 0.85 |
-| 3 — Unlearning | 0.4700011591814447 |
+| 3 — Unlearning | 0.470 |
 
 Sources: the official task statements and opening slides distributed to participants, the event page, and the
 organisers' messages.

@@ -4,7 +4,7 @@
 [arXiv:2410.20247](https://arxiv.org/abs/2410.20247) · code and dataset:
 [i-gao/model-equality-testing](https://github.com/i-gao/model-equality-testing).
 The paper is distributed under CC BY 4.0 and is included here: [PDF](gao2025_model_equality_testing.pdf).
-Longer course, in French: [`../courses/model_equality_testing_course_fr.pdf`](../courses/model_equality_testing_course_fr.pdf).
+Toy implementation: [`../explanations/toy/met_toy.py`](../explanations/toy/met_toy.py).
 
 ## The question
 
@@ -49,8 +49,8 @@ version? With only text completions — no weights, no log-probabilities — the
 - **One test per kind of variant**, each validated on the `ref` endpoints: a likelihood ratio against our own simulated
   fp8 (the most powerful test when both hypotheses are known, by Neyman–Pearson), a fitted temperature, correlated
   token-frequency residuals for LoRA, the rate of identical answers for watermarks.
-- Details: [`task2/README.md`](../../task2/README.md); method explained in French:
-  [`../courses/task2_method_explained_fr.md`](../courses/task2_method_explained_fr.md).
+- Details: [`task2/README.md`](../../task2/README.md); method explained at length:
+  [`../explanations/task2_method.md`](../explanations/task2_method.md).
 
 ## Other references given with the task
 

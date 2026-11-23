@@ -2,8 +2,7 @@
 
 **M. Kurmanji, P. Triantafillou, J. Hayes, E. Triantafillou.** *Towards Unbounded Machine Unlearning.* NeurIPS 2023.
 [arXiv:2302.09880](https://arxiv.org/abs/2302.09880) · code: [Meghdad92/SCRUB](https://github.com/Meghdad92/SCRUB).
-Longer course, in French: [`../courses/scrub_unlearning_course_fr.pdf`](../courses/scrub_unlearning_course_fr.pdf);
-toy implementation: [`../courses/toy/scrub_minimal.py`](../courses/toy/scrub_minimal.py).
+Toy implementation: [`../explanations/toy/scrub_minimal.py`](../explanations/toy/scrub_minimal.py).
 
 ## The question
 
@@ -49,8 +48,8 @@ examples — then rewinds to the checkpoint whose forget error is closest to it.
   lowered, by a margin set by the image's difficulty rank through a quantile transform — and distil towards it, with
   a per-image cross-entropy term for the loss distribution, altered copies, and COCO images as anchors in place of
   the retain set. Then average the weights of six such models. 0.4700 public.
-- Details: [`task3/README.md`](../../task3/README.md); method explained in French:
-  [`../courses/task3_method_explained_fr.md`](../courses/task3_method_explained_fr.md).
+- Details: [`task3/README.md`](../../task3/README.md); method explained at length:
+  [`../explanations/task3_method.md`](../explanations/task3_method.md).
 
 ## Other references given with the task
 

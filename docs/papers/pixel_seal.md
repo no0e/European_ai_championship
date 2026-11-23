@@ -3,7 +3,7 @@
 **T. Souček, P. Fernandez, H. Elsahar, S.-A. Rebuffi, V. Lacatusu, T. Tran, T. Sander, A. Mourachko.**
 *Pixel Seal: Adversarial-only training for invisible image and video watermarking.* Meta FAIR, December 2025.
 [arXiv:2512.16874](https://arxiv.org/abs/2512.16874) · code: [facebookresearch/videoseal](https://github.com/facebookresearch/videoseal)
-(MIT). Longer course, in French: [`../courses/pixel_seal_course_fr.pdf`](../courses/pixel_seal_course_fr.pdf).
+(MIT).
 
 ## In one paragraph
 

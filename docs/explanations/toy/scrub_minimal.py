@@ -1,13 +1,13 @@
 """
-SCRUB minimal (Kurmanji et al., NeurIPS 2023) -- version pédagogique, CPU, ~1 minute.
+Minimal SCRUB (Kurmanji et al., NeurIPS 2023) -- teaching version, CPU, about one minute.
 
-Ce script :
-  1. fabrique un petit jeu de données synthétique (5 classes),
-  2. entraîne un modèle "original" sur tout D (il sur-apprend volontairement),
-  3. entraîne un modèle "retrain" (oracle) sur D_r seulement,
-  4. applique SCRUB (max-steps sur D_f, min-steps sur D_r) en gardant un checkpoint par époque,
-  5. applique SCRUB+R (rewinding) avec un ensemble de validation de même distribution que D_f,
-  6. mesure les erreurs (retain / forget / test) et une attaque d'inférence d'appartenance "basique".
+This script:
+  1. builds a small synthetic dataset (5 classes),
+  2. trains an "original" model on all of D (it deliberately overfits),
+  3. trains a "retrain" model (the oracle) on D_r only,
+  4. runs SCRUB (max-steps on D_f, min-steps on D_r), keeping one checkpoint per epoch,
+  5. runs SCRUB+R (rewinding) with a validation set from the same distribution as D_f,
+  6. measures the errors (retain / forget / test) and a "basic" membership-inference attack.
 """
 import copy
 import numpy as np
@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedShuffleSplit, cross_val_score
 torch.manual_seed(0)
 np.random.seed(0)
 
-# ----------------------------------------------------------------------------- données
+# ----------------------------------------------------------------------------- data
 X, y = make_classification(n_samples=6000, n_features=40, n_informative=12, n_redundant=4,
                            n_classes=5, n_clusters_per_class=2, class_sep=0.9, flip_y=0.05,
                            random_state=0)
@@ -29,11 +29,11 @@ X = torch.tensor(X, dtype=torch.float32)
 y = torch.tensor(y, dtype=torch.long)
 perm = torch.randperm(len(X))
 X, y = X[perm], y[perm]
-X_train, y_train = X[:1500], y[:1500]          # petit D -> le modèle mémorise
-X_test, y_test = X[1500:4500], y[1500:4500]    # données jamais vues
-X_val, y_val = X[4500:], y[4500:]              # sert au rewinding
+X_train, y_train = X[:1500], y[:1500]          # small D -> the model memorises
+X_test, y_test = X[1500:4500], y[1500:4500]    # never-seen data
+X_val, y_val = X[4500:], y[4500:]              # used for rewinding
 
-# forget set "sélectif" : 60 exemples de la classe 0 (le reste de la classe 0 reste dans D_r)
+# "selective" forget set: 60 examples of class 0 (the rest of class 0 stays in D_r)
 idx_c0 = (y_train == 0).nonzero().squeeze()
 forget_idx = idx_c0[:60]
 mask = torch.ones(len(X_train), dtype=torch.bool)
@@ -71,7 +71,7 @@ def error(model, Xs, ys):
 
 # ----------------------------------------------------------------------------- SCRUB
 def kl_teacher_student(logits_s, logits_t, T=4.0):
-    """d(x; w_u) = KL( p_teacher || p_student ), avec température T (comme DistillKL du dépôt)."""
+    """d(x; w_u) = KL( p_teacher || p_student ), at temperature T (like DistillKL in the official code)."""
     log_p_s = F.log_softmax(logits_s / T, dim=1)
     p_t = F.softmax(logits_t / T, dim=1)
     return F.kl_div(log_p_s, p_t, reduction="batchmean") * T * T
@@ -81,16 +81,16 @@ def scrub(teacher, Xr, yr, Xf, alpha=1.0, gamma=1.0, epochs=10, max_epochs=4,
           lr=1e-3, bs_r=64, bs_f=8):
     teacher.eval()
     student = copy.deepcopy(teacher)               # w_u <- w_o
-    opt = torch.optim.Adam(student.parameters(), lr=lr)   # le papier : Adam en petite échelle
+    opt = torch.optim.Adam(student.parameters(), lr=lr)   # the paper: Adam at small scale
     checkpoints = [copy.deepcopy(student.state_dict())]
     for epoch in range(epochs):
-        if epoch < max_epochs:                     # ---- max-step : s'éloigner du prof sur D_f
+        if epoch < max_epochs:                     # ---- max-step: move away from the teacher on D_f
             for xb, _ in batches(Xf, torch.zeros(len(Xf)), bs_f):
                 with torch.no_grad():
                     lt = teacher(xb)
                 loss = -kl_teacher_student(student(xb), lt)
                 opt.zero_grad(); loss.backward(); opt.step()
-        for xb, yb in batches(Xr, yr, bs_r):       # ---- min-step : rester proche sur D_r
+        for xb, yb in batches(Xr, yr, bs_r):       # ---- min-step: stay close on D_r
             with torch.no_grad():
                 lt = teacher(xb)
             ls = student(xb)
@@ -101,8 +101,8 @@ def scrub(teacher, Xr, yr, Xf, alpha=1.0, gamma=1.0, epochs=10, max_epochs=4,
 
 
 def rewind(checkpoints, Xf, yf, X_val_same_dist, y_val_same_dist):
-    """SCRUB+R : choisit le checkpoint dont l'erreur sur D_f est la plus proche de la
-    référence = erreur, à la fin de SCRUB, sur un ensemble de validation de même distribution."""
+    """SCRUB+R: pick the checkpoint whose error on D_f is closest to the reference,
+    i.e. the error at the end of SCRUB on a validation set from the same distribution."""
     m = make_model()
     m.load_state_dict(checkpoints[-1])
     ref = error(m, X_val_same_dist, y_val_same_dist)
@@ -116,11 +116,11 @@ def rewind(checkpoints, Xf, yf, X_val_same_dist, y_val_same_dist):
     return m, best, ref
 
 
-# ----------------------------------------------------------------------------- MIA basique
+# ----------------------------------------------------------------------------- basic MIA
 @torch.no_grad()
 def basic_mia(model, Xf, yf, Xt, yt):
-    """Attaquant = régression logistique sur la perte. 'in' = forget, 'out' = test (même classe).
-    Score idéal ~ 50 % (l'attaquant ne fait pas mieux que le hasard)."""
+    """Attacker = logistic regression on the loss. 'in' = forget, 'out' = test (same class).
+    Ideal score ~ 50 % (the attacker does no better than chance)."""
     n = min(len(Xf), len(Xt))
     lf = F.cross_entropy(model(Xf[:n]), yf[:n], reduction="none").clamp(-400, 400).numpy()
     lt = F.cross_entropy(model(Xt[:n]), yt[:n], reduction="none").clamp(-400, 400).numpy()
@@ -135,18 +135,18 @@ if __name__ == "__main__":
     retrain = train(make_model(), Xr, yr)
 
     student, ckpts = scrub(original, Xr, yr, Xf)
-    Xv0, yv0 = X_val[y_val == 0], y_val[y_val == 0]       # validation de même distribution que D_f
+    Xv0, yv0 = X_val[y_val == 0], y_val[y_val == 0]       # validation set from the same distribution as D_f
     rewound, k, ref = rewind(ckpts, Xf, yf, Xv0, yv0)
 
-    Xt0, yt0 = X_test[y_test == 0], y_test[y_test == 0]   # test "out" de la même classe
-    print(f"{'modèle':<10}{'retain':>9}{'forget':>9}{'test':>9}{'MIA':>9}")
+    Xt0, yt0 = X_test[y_test == 0], y_test[y_test == 0]   # "out" test examples of the same class
+    print(f"{'model':<10}{'retain':>9}{'forget':>9}{'test':>9}{'MIA':>9}")
     for name, m in [("Original", original), ("Retrain", retrain),
                     ("SCRUB", student), ("SCRUB+R", rewound)]:
         print(f"{name:<10}{error(m, Xr, yr):9.1f}{error(m, Xf, yf):9.1f}"
               f"{error(m, X_test, y_test):9.1f}{basic_mia(m, Xf, yf, Xt0, yt0):9.1f}")
-    print(f"Rewinding : référence = {ref:.1f} % -> checkpoint choisi = époque {k}")
+    print(f"Rewinding: reference = {ref:.1f} % -> chosen checkpoint = epoch {k}")
 
-    # trajectoire (utile pour tracer la dynamique d'apprentissage)
+    # trajectory (useful to plot the learning dynamics)
     m = make_model()
     print("epoch,retain,forget,val")
     for e, sd in enumerate(ckpts):
