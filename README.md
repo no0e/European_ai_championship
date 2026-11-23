@@ -102,14 +102,12 @@ with known "gold" models) told us the structure; averaging the **weights of six 
 | [The three task statements](docs/tasks/) | summarised, with the exact scoring formulas |
 | [The research papers](docs/papers/README.md) | reading notes on Pixel Seal, Model Equality Testing and SCRUB |
 | [Our methods, explained](docs/explanations/README.md) | long-form explanations of tasks 2 and 3, toy scripts |
-| [Slides of our final presentation](slides/Sevellabs.pdf) | the 12-slide deck |
 | [Code map](docs/code_map.md) | where each idea lives in the code |
 | [Reproducing our results](docs/reproducing.md) | running the pipelines, re-submitting our files |
 
 ```
 task1/  task2/  task3/   one folder per task: README, code (src/), pipeline (steps/), results/
 docs/                    context, task statements, papers, explanations, figures
-slides/                  the deck of the final presentation
 ```
 
 Scores are public-leaderboard values, computed on part of the test data; the final ranking used the hidden part.

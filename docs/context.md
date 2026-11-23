@@ -51,7 +51,7 @@ attributed to the watermark owner), finding *which* model an API really serves, 
 - **Preparation** (the week before): reading notes and a beginner's course on each recommended paper, toy
   implementations of the core ideas (see [explanations/](explanations/README.md)), and a GPU setup tested on
   the cluster.
-- **During the 22 hours**: one rule for all three tasks, which is also the title of our slides: **measure before tuning** — a local metric identical to
+- **During the 22 hours**: one rule for all three tasks: **measure before tuning** — a local metric identical to
   the official one (task 1), endpoints with a known answer (task 2's `ref-01`…`ref-09`), a simulator with a known
   gold model (task 3).
 - **After the event**: the code of the best submission of each task was reorganised into this repository, with a
